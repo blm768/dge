@@ -89,12 +89,12 @@ class Mesh {
 			//To do: avoid repeating each frame?
 			posVbo.enable();
 			posVbo.bindToAttribute(program.vAttributes.position);
-			//normalVbo.enable();
-			//normalVbo.bindToAttribute(program.vAttributes.normal);
-			/+if(texCoords.length > 0) {
+			normalVbo.enable();
+			normalVbo.bindToAttribute(program.vAttributes.normal);
+			if(texCoords.length > 0) {
 				texCoordVbo.enable();
 				texCoordVbo.bindToAttribute(program.vAttributes.texCoord);
-			}+/
+			}
 			elementArray.bind();
 			glDrawElements(GL_TRIANGLES, faces.length * 3, GL_UNSIGNED_INT, null);
 			//glDrawArrays(GL_POINTS, 0, vertices.length);

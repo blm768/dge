@@ -10,10 +10,10 @@ import derelict.opengl3.gl3;
 enum {
 	//Determines whether to use precompiled Derelict libraries instead of recompiling each time
 	bool useDerelictLibs = false,
-	
+
 	uint glMajorVersion = 3,
-	uint glMinorVersion = 3,
-	
+	uint glMinorVersion = 2,
+
 	size_t depthBufferSize = 24,
 	size_t stencilBufferSize = 8,
 }
