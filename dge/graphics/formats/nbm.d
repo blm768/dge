@@ -190,43 +190,26 @@ class NBTFile {
 		}
 	}
 
-	//Used only when parsing the file
-	ubyte[] bytes;
-
-	//Maps scalar tag types to the D types that represent them
-	enum string[] tagNativeTypes = ["void", "byte", "short", "int", "long", "float", "double"];
-	enum size_t[] tagNativeSizes = [0, 1, short.sizeof, int.sizeof, long.sizeof, float.sizeof, double.sizeof];
-	template nativeTypeFromId(TagType tId) if(isScalarType(tId)) {
-		mixin("alias " ~ tagNativeTypes[tId] ~ " typeFromId;");
-	}
-
-	//Maps D scalar types to tag types
-	template typeId(T: byte) {enum typeId = TagType.Byte;}
-	template typeId(T: short) {enum typeId = TagType.Short;}
-	template typeId(T: int) {enum typeId = TagType.Int;}
-	template typeId(T: long) {enum typeId = TagType.Long;}
-	template typeId(T: float) {enum typeId = TagType.Float;}
-	template typeId(T: double) {enum typeId = TagType.Double;}
-	//Catch types that don't map to scalars.
-	template typeId(T) {enum typeId = TagType.Invalid;}
-
 	//Provides raw parsing of an array of scalars to make TagList more efficient
 	void[] parseArray(TagType type, size_t len) {
 		ubyte[] array;
-		const size_t totalLen = len * tagNativeSizes[type];
+		const size_t totalLen = len * Tag.nativeSizes[type];
 		version(LittleEndian) {
 			//To do: needed?
 			array = bytes[0 .. totalLen].dup;
 			bytes = bytes[totalLen .. $];
 			//Flip bytes.
-			for(size_t offset = 0; offset < totalLen; offset += tagNativeSizes[type]) {
-				array[offset .. offset + tagNativeSizes[type]].reverse;
+			for(size_t offset = 0; offset < totalLen; offset += Tag.nativeSizes[type]) {
+				array[offset .. offset + Tag.nativeSizes[type]].reverse;
 			}
 		} else {
 			array = bytes[0 .. totalLen];
 		}
 		return cast(void[]) array;
 	}
+
+	//Used only when parsing the file
+	ubyte[] bytes;
 
 }
 
@@ -240,6 +223,25 @@ abstract class Tag {
 	}
 
 	string name;
+
+	static:
+	//Maps scalar tag types to the D types that represent them
+	enum string[] nativeTypes = ["void", "byte", "short", "int", "long", "float", "double"];
+	enum size_t[] nativeSizes = [0, 1, short.sizeof, int.sizeof, long.sizeof, float.sizeof, double.sizeof];
+	template nativeTypeFromId(TagType tId) if(isScalarType(tId)) {
+		mixin("alias " ~ nativeTypes[tId] ~ " typeFromId;");
+	}
+
+	//Maps D scalar types to tag types
+	//Catch types that don't map to scalars.
+	template typeId(T) {enum typeId = TagType.Invalid;}
+	//Map types that can be mapped.
+	template typeId(T: byte) {enum typeId = TagType.Byte;}
+	template typeId(T: short) {enum typeId = TagType.Short;}
+	template typeId(T: int) {enum typeId = TagType.Int;}
+	template typeId(T: long) {enum typeId = TagType.Long;}
+	template typeId(T: float) {enum typeId = TagType.Float;}
+	template typeId(T: double) {enum typeId = TagType.Double;}
 }
 
 class TagEnd: Tag {
@@ -328,18 +330,18 @@ class TagList: PayloadTag!(void[]) {
 		return result;
 	}
 
-	override @property T[] scalars(T)() if(translatesToScalar!T) {
-		if(elementType == NBTFile.typeId!T) {
+	@property T[] scalars(T)() if(translatesToScalar!T) {
+		if(elementType == Tag.typeId!T) {
 			return cast(T[]) value;
 		} else {
-			assert(false, "Attempt to retrieve " ~ T.stringof ~ " from TagList of " ~ NBTFile.tagNativeTypes[elementType]);
+			assert(false, "Attempt to retrieve " ~ T.stringof ~ " from TagList of " ~ Tag.nativeTypes[elementType]);
 		}
 	}
 
-	override @property T[] scalars(T)(T[] array) if(translatesToScalar!T) {
-		elementType = NBTFile.typeId(T);
+	/++@property T[] scalars(T)(T[] array) if(translatesToScalar!T) {
+		elementType = NBTFile.typeId!T;
 		value = cast(void[])array;
-	}
+	}+/
 
 	@property Tag[] tags() {
 		if(isScalarType(elementType)) {

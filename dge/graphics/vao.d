@@ -24,9 +24,10 @@ class VAO {
 }
 
 struct AttributeArray {
-	this(int elementsPerVertex, GLenum elementType = GL_FLOAT) {
+	this(int elementsPerVertex, GLenum elementType, size_t elementSize) {
 		glGenBuffers(1, &id);
 		this.elementType = elementType;
+		this.elementSize = elementSize;
 		this.elementsPerVertex = elementsPerVertex;
 		setData([]);
 	}
@@ -39,7 +40,7 @@ struct AttributeArray {
 		attributeNum = attNum;
 		if(attNum > -1) {
 			bind();
-			glVertexAttribPointer(attributeNum, elementsPerVertex, elementType, GL_FALSE, 0, null);
+			glVertexAttribPointer(attributeNum, elementsPerVertex, elementType, GL_FALSE, elementSize, null);
 		}
 	}
 
@@ -75,8 +76,9 @@ struct AttributeArray {
 
     private:
     uint id;
-    int attributeNum;
+    int attributeNum = -1;
 	uint elementType;
+	size_t elementSize;
 	int elementsPerVertex;
 }
 

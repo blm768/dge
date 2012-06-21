@@ -27,9 +27,9 @@ class Mesh {
 	this() {
 		vao = new VAO;
 		vao.bind();
-		posVbo = AttributeArray(3, GL_FLOAT);
-		normalVbo = AttributeArray(3, GL_FLOAT);
-		texCoordVbo = AttributeArray(2, GL_FLOAT);
+		posVbo = AttributeArray(3, GL_FLOAT, Vector3.sizeof);
+		normalVbo = AttributeArray(3, GL_FLOAT, Vector3.sizeof);
+		texCoordVbo = AttributeArray(2, GL_FLOAT, Vector3.sizeof);
 	}
 
 	public:
@@ -91,11 +91,13 @@ class Mesh {
 			posVbo.bindToAttribute(program.vAttributes.position);
 			//normalVbo.enable();
 			//normalVbo.bindToAttribute(program.vAttributes.normal);
-			//texCoordVbo.enable();
-			//texCoordVbo.bindToAttribute(program.vAttributes.texCoord);
-			//elementArray.bind();
-			//glDrawElements(GL_TRIANGLES, faces.length, GL_UNSIGNED_INT, faces.ptr);
-			glDrawArrays(GL_POINTS, 0, vertices.length);
+			/+if(texCoords.length > 0) {
+				texCoordVbo.enable();
+				texCoordVbo.bindToAttribute(program.vAttributes.texCoord);
+			}+/
+			elementArray.bind();
+			glDrawElements(GL_TRIANGLES, faces.length * 3, GL_UNSIGNED_INT, null);
+			//glDrawArrays(GL_POINTS, 0, vertices.length);
 			posVbo.disable();
 			normalVbo.disable();
 			texCoordVbo.disable();

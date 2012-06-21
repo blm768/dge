@@ -39,32 +39,42 @@ class ShaderProgram {
 	Remove the use() call? (could break some code and eventually won't be needed)
 	+/
 	void setUniform(Vector3 vec, int uniform) {
-		//glProgramUniform3fv(programId, uniform, 1, &vec);
-		use();
-		glUniform3fv(uniform, 1, vec.ptr);
+		if(uniform > -1) {
+			//glProgramUniform3fv(programId, uniform, 1, &vec);
+			use();
+			glUniform3fv(uniform, 1, vec.ptr);
+		}
 	}
 
 	void setUniform(Vector3[] vec, int uniform) {
-		//glProgramUniform3fv(programId, uniform, vec.length, vec.ptr);
-		use();
-		glUniform3fv(uniform, vec.length, cast(float*)vec.ptr);
+		if(uniform > -1) {
+			//glProgramUniform3fv(programId, uniform, vec.length, vec.ptr);
+			use();
+			glUniform3fv(uniform, vec.length, cast(float*)vec.ptr);
+		}
 	}
 
 	void setUniform(Color c, int uniform) {
-		//glProgramUniform4fv(programId, uniform, 1, &c);
-		use();
-		glUniform3fv(uniform, 1, c.ptr);
+		if(uniform > -1) {
+			//glProgramUniform4fv(programId, uniform, 1, &c);
+			use();
+			glUniform3fv(uniform, 1, c.ptr);
+		}
 	}
 
 	void setUniform(Color[] c, int uniform) {
-		//glProgramUniform4fv(programId, uniform, c.length, c.ptr);
-		use();
-		glUniform3fv(uniform, c.length, cast(float*)c.ptr);
+		if(uniform > -1) {
+			//glProgramUniform4fv(programId, uniform, c.length, c.ptr);
+			use();
+			glUniform3fv(uniform, c.length, cast(float*)c.ptr);
+		}
 	}
 
 	void setUniform(TransformMatrix mat, int uniform) {
-		use();
-		glUniformMatrix4fv(uniform, 1, cast(ubyte)false, mat.ptr);
+		if(uniform > -1) {
+			use();
+			glUniformMatrix4fv(uniform, 1, cast(ubyte)false, mat.ptr);
+		}
 	}
 
 	void finish() {
@@ -72,7 +82,6 @@ class ShaderProgram {
 	}
 
 	int getUniformLocation(const(char)[] name) {
-		//use();
 		return glGetUniformLocation(programId, toStringz(name));
 	}
 
