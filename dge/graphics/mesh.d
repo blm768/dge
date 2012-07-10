@@ -96,8 +96,8 @@ class Mesh {
 				texCoordVbo.bindToAttribute(program.vAttributes.texCoord);
 			}
 			elementArray.bind();
-			glDrawElements(GL_TRIANGLES, faces.length * 3, GL_UNSIGNED_INT, null);
-			//glDrawArrays(GL_POINTS, 0, vertices.length);
+			glDrawElements(GL_TRIANGLES, cast(int)faces.length * 3, GL_UNSIGNED_INT, null);
+			glDrawArrays(GL_POINTS, 0, cast(int)vertices.length);
 			posVbo.disable();
 			normalVbo.disable();
 			texCoordVbo.disable();
@@ -133,7 +133,7 @@ class AnimatedMesh: Mesh {
 
 	}
 	VertexAction[] vertexActions;
-	size_t[string] vertexActionLookup;
+	uint[string] vertexActionLookup;
 }
 
 struct VertexAnimationFrame {

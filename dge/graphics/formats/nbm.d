@@ -49,7 +49,7 @@ void compressGzipFile(string filename, ubyte[] uncompressed) {
 	gzFile file = gzopen(cast(char*)toStringz(filename.dup), cast(char*)toStringz("wb".dup));
 	assert(file != null, "Unable to open file " ~ filename ~ " for writing");
 	scope(exit) gzclose(file);
-	int status = gzwrite(file, uncompressed.ptr, uncompressed.length);
+	int status = gzwrite(file, uncompressed.ptr, cast(uint)uncompressed.length);
 	assert(status == uncompressed.length, "Error while writing " ~ filename);
 }
 
@@ -303,7 +303,7 @@ class TagByteArray: PayloadTag!(byte[]) {
 	override @property string typeName() {return "byte-array";}
 
 	override ubyte[] serialize() {
-		return toBytes!int(value.length) ~ cast(ubyte[])value;
+		return toBytes!int(cast(int)value.length) ~ cast(ubyte[])value;
 	}
 
 	alias value bytes;
@@ -322,7 +322,7 @@ class TagList: PayloadTag!(void[]) {
 			//result ~= toBytes!int(value.length / NBTFile.tagNativeSizes[elementType]);
 			//result ~= cast(ubyte[])value;
 		} else {
-			result ~= toBytes!int(value.length / (void*).sizeof);
+			result ~= toBytes!int(cast(int)(value.length / (void*).sizeof));
 			foreach(Tag t; cast(Tag[])value) {
 				result ~= t.serialize();
 			}

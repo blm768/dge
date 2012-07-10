@@ -61,12 +61,12 @@ class Scene: NodeGroup {
 	Set!CollisionObstacle collisionObstacles;
 
 	///Incremented each time the scene is rendered; used to synchronize updates
-	@property size_t currentFrame() {
+	@property uint currentFrame() {
 		return _currentFrame;
 	}
 
 	private:
-	size_t _currentFrame;
+	uint _currentFrame;
 }
 
 class NodeGroup: Node {
@@ -284,9 +284,9 @@ class MeshNode: Node {
 		this.mesh = mesh;
 	}
 
-	override void update() {
+	/+override void update() {
 		rotation = rotation * rotationMatrix(0.0, 0.05, 0.0);
-	}
+	}+/
 
 	override void draw() {
 		mesh.draw(scene, worldTransform, false);

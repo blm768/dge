@@ -23,7 +23,7 @@ struct Vector3 {
 		this.y = y;
 		this.z = z;
 	}
-	
+
 	this()(const auto ref float[3] values) {
 		this.values = values;
 	}
@@ -51,21 +51,21 @@ struct Vector3 {
 	@property void z(float z) pure {
 		values[2] = z;
 	}
-	
+
 	@property float magnitude() const pure {
 		return sqrt(dot(this, this));
 	}
-	
+
 	alias magnitude mag;
-	
+
 	@property float magSquared() const pure {
 		return dot(this, this);
 	}
-	
+
 	Vector3 normalized() {
 		return this / magnitude;
 	}
-	
+
 	Vector3 opUnary(string s)() {
 		static if(s == "-") {
 			Vector3 result = this;
@@ -75,64 +75,64 @@ struct Vector3 {
 			static assert(0, `"` ~ s ~ `" is an invalid operator for dge.math.Vector3.opUnary().`);
 		}
 	}
-	
+
 	Vector3 opBinary(string op: "+")(Vector3 other) const {
 		Vector3 result = Vector3(values);
 		result.values[] += other.values[];
 		return result;
 	}
-	
+
 	Vector3 opBinary(string op: "-")(Vector3 other) {
 		Vector3 result = Vector3(values);
 		result.values[] -= other.values[];
 		return result;
 	}
-	
+
 	Vector3 opBinary(string op: "*")(Vector3 other) {
 		Vector3 result = Vector3(values);
 		result.values[] *= other.values[];
 		return result;
 	}
-	
+
 	Vector3 opBinary(string op: "/")(Vector3 other) {
 		Vector3 result = Vector3(values);
 		result.values[] /= other.values[];
 		return result;
 	}
-	
+
 	Vector3 opBinary(string op: "*")(float other) {
 		Vector3 result = Vector3(values);
 		result.values[] *= other;
 		return result;
 	}
-	
+
 	Vector3 opBinary(string op: "/")(float other) {
 		Vector3 result = Vector3(values);
 		result.values[] /= other;
 		return result;
 	}
-	
+
 	//Handle commutative property of multiplication with a scalar.
 	Vector3 opBinaryRight(string op)(float other) {
 		return opBinary!op(other);
 	}
-	
+
 	//Hack to get DMD to work :)
 	alias Matrix!(4, 1) Vec4;
 	Vector3 opBinaryRight(string op: "*")(const TransformMatrix m) const {
 		Vector3 result;
-		
+
 		Vec4 vec4;
 		vec4.values[0][0 .. 3] = values[];
 		vec4.values[0][3] = 1;
 		result.values[0 .. 3] = (m * vec4).values[0][0 .. 3];
 		return result;
 	}
-	
+
 	string toString() const {
 		return "(" ~ to!string(x) ~ ", " ~ to!string(y) ~ ", " ~ to!string(z) ~ ")";
 	}
-	
+
 	float[3] values;
 	@property float* ptr() {return values.ptr;}
 }
@@ -140,12 +140,12 @@ struct Vector3 {
 struct Plane {
 	Vector3 normal;
 	float d;
-	
+
 	this(Vector3 normal, Vector3 pos) {
 		this.normal = normal;
 		d = -dot(normal, pos);
 	}
-	
+
 	float signedDistanceTo(Vector3 pos) {
 		return dot(normal, pos) + d;
 	}
@@ -179,13 +179,13 @@ array passed to the constructor will be the transposed version of the desired ma
 struct Matrix(size_t numRows, size_t numCols) {
 	static enum size_t rows = numRows;
 	static enum size_t cols = numCols;
-	
+
 	float[numRows][numCols] values;
-	
+
 	@property float* ptr() pure const {
 		return cast(float*) values.ptr;
 	}
-	
+
 	///Performs a standard matrix multiplication
 	Matrix!(rows, OtherMatrix.cols) opBinary(string op: "*", OtherMatrix)(OtherMatrix other) const if(__traits(compiles, OtherMatrix.rows) && cols == OtherMatrix.rows) {
 		Matrix!(rows, OtherMatrix.cols) result;
@@ -201,7 +201,7 @@ struct Matrix(size_t numRows, size_t numCols) {
 		}
 		return result;
 	}
-	
+
 	@property Matrix!(numCols, numRows) transposed() pure const {
 		Matrix!(cols, rows) result;
 		foreach(size_t colNum, const float[numRows] col; values) {
@@ -211,7 +211,7 @@ struct Matrix(size_t numRows, size_t numCols) {
 		}
 		return result;
 	}
-	
+
 	string toString() {
 		string text;
 		for(size_t row = 0; row < numRows; ++row) {
@@ -255,7 +255,7 @@ TransformMatrix perspectiveMatrix(float aspectRatio, float angle, float near, fl
 	//Width and height of the frustum at the near plane
 	float w = 2 * near * tan(angle);
 	float h = w / aspectRatio;
-	
+
 	float depth = far - near;
 	float q = -(far + near) / depth;
 	float qn = -2 * (far * near) / depth;

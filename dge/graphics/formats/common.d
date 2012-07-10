@@ -3,6 +3,7 @@ Common tools for all format loaders
 +/
 module dge.graphics.formats.common;
 
+import std.array;
 import std.conv;
 import std.stdio;
 
@@ -32,7 +33,7 @@ Mesh sourceMeshToMesh(SourceMesh src, Material[string] materials) {
 		VertexAction act;
 		act.frames.length = srcAct.frames.length;
 		vertexActions[vertexActionIndex] = act;
-		vertexActionLookup[name] = vertexActionIndex;
+		vertexActionLookup[name] = cast(uint)vertexActionIndex;
 		++vertexActionIndex;
 	}
 
@@ -42,6 +43,7 @@ Mesh sourceMeshToMesh(SourceMesh src, Material[string] materials) {
 		m = new Mesh;
 	}
 
+	//To do: use uninitializedArray.
 	m.faceGroups.length = src.faceGroups.length;
 	size_t faceGroupIndex = 0;
 	foreach(string matName, SourceFaceGroup srcFg; src.faceGroups) {
@@ -49,7 +51,7 @@ Mesh sourceMeshToMesh(SourceMesh src, Material[string] materials) {
 		assert(mat, `Unable to locate material "` ~ matName ~ `"`);
 
 		Mesh.FaceGroup fg = m.new Mesh.FaceGroup(mat);
-		
+
 		Face[] faces;
 		faces.length = srcFg.faces.length;
 		//loop over the source faces
@@ -59,7 +61,7 @@ Mesh sourceMeshToMesh(SourceMesh src, Material[string] materials) {
 			for(uint i = 0; i < 3; ++i) {
 				uint v = face.vertices[i];
 				uint n = face.normals[i];
-				uint t;
+				uint t = 0;
 				//If texCoords are included in the data, get the index; otherwise, use zero as a dummy value.
 				if(face.texCoords.length > 0) {
 					t = face.texCoords[i];
@@ -90,7 +92,7 @@ Mesh sourceMeshToMesh(SourceMesh src, Material[string] materials) {
 					}
 
 					//Add an entry to UsedSets:
-					usedSets[vertex] = m.vertices.length - 1;
+					usedSets[vertex] = cast(uint)vertices.length - 1;
 				}
 				nextFace.vertices[i] = usedSets[vertex];
 			}
@@ -110,7 +112,7 @@ Mesh sourceMeshToMesh(SourceMesh src, Material[string] materials) {
 		am.vertexActions = vertexActions;
 		am.vertexActionLookup = vertexActionLookup;
 	}
-	
+
 	return m;
 }
 

@@ -40,7 +40,7 @@ struct AttributeArray {
 		attributeNum = attNum;
 		if(attNum > -1) {
 			bind();
-			glVertexAttribPointer(attributeNum, elementsPerVertex, elementType, GL_FALSE, elementSize, null);
+			glVertexAttribPointer(attributeNum, elementsPerVertex, elementType, GL_FALSE, cast(int)elementSize, null);
 		}
 	}
 

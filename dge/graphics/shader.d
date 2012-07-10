@@ -50,7 +50,7 @@ class ShaderProgram {
 		if(uniform > -1) {
 			//glProgramUniform3fv(programId, uniform, vec.length, vec.ptr);
 			use();
-			glUniform3fv(uniform, vec.length, cast(float*)vec.ptr);
+			glUniform3fv(uniform, cast(int)vec.length, cast(float*)vec.ptr);
 		}
 	}
 
@@ -66,7 +66,7 @@ class ShaderProgram {
 		if(uniform > -1) {
 			//glProgramUniform4fv(programId, uniform, c.length, c.ptr);
 			use();
-			glUniform3fv(uniform, c.length, cast(float*)c.ptr);
+			glUniform3fv(uniform, cast(int)c.length, cast(float*)c.ptr);
 		}
 	}
 
@@ -82,10 +82,13 @@ class ShaderProgram {
 	}
 
 	int getUniformLocation(const(char)[] name) {
+		//To do: remove?
+		use();
 		return glGetUniformLocation(programId, toStringz(name));
 	}
 
 	int getAttribLocation(const(char)[] name) {
+		//To do: remove?
 		use();
 		return glGetAttribLocation(programId, toStringz(name));
 	}
@@ -220,15 +223,15 @@ class FragmentShader: Shader {
 private string defaultVertexShaderText = `
 #version 330
 
-in mat4 modelview;
-in mat4 projection;
+uniform mat4 modelview;
+uniform mat4 projection;
 
 in vec4 position;
 in vec4 normal;
 in vec4 texCoord;
 
 void main() {
-	gl_Position = projection * modelview * position;
+	gl_Position = projection * modelview * position * 0.0001 + position + vec4(0, 0, -6, 1);
 }
 `;
 
