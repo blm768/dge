@@ -87,17 +87,16 @@ class Mesh {
 			program.setUniform(scene.activeCamera.projection, program.vUniforms.projection);
 			vao.bind();
 			//To do: avoid repeating each frame?
-			posVbo.enable();
 			posVbo.bindToAttribute(program.vAttributes.position);
-			normalVbo.enable();
+			posVbo.enable();
 			normalVbo.bindToAttribute(program.vAttributes.normal);
+			normalVbo.enable();
 			if(texCoords.length > 0) {
-				texCoordVbo.enable();
 				texCoordVbo.bindToAttribute(program.vAttributes.texCoord);
+				texCoordVbo.enable();
 			}
 			elementArray.bind();
 			glDrawElements(GL_TRIANGLES, cast(int)faces.length * 3, GL_UNSIGNED_INT, null);
-			glDrawArrays(GL_POINTS, 0, cast(int)vertices.length);
 			posVbo.disable();
 			normalVbo.disable();
 			texCoordVbo.disable();

@@ -27,7 +27,9 @@ class Window {
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
 		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
-		SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,   8);
+		static if(useBufferAlpha) {
+			SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,   8);
+		}
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   depthBufferSize);
 		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilBufferSize);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -49,6 +51,7 @@ class Window {
 
 		/+glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);+/
+		glDisable(GL_DEPTH_TEST);
 
 		scene = new Scene;
 
