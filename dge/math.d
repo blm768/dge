@@ -253,16 +253,17 @@ TransformMatrix scaleMatrix(Vector3 s) {
 
 TransformMatrix perspectiveMatrix(float aspectRatio, float angle, float near, float far) {
 	//Width and height of the frustum at the near plane
-	float w = 2 * near * tan(angle);
-	float h = w / aspectRatio;
+	float right = near * tan(angle / 2);
+	float top = right / aspectRatio;
 
 	float depth = far - near;
 	float q = -(far + near) / depth;
 	float qn = -2 * (far * near) / depth;
 
 
-	return TransformMatrix([[w,		0.0,	0.0,	0.0 ],
-							[0.0,	h,		0.0,	0.0 ],
-							[0.0, 	0.0,	q,		-1.0],
-							[0.0,	0.0,	qn,		0.0 ]]);
+	return /+scaleMatrix(Vector3(1.0/12.0, 1.0/12.0, 1.0/12.0));+/
+			TransformMatrix([[near/right,	0.0,			0.0,	0.0 ],
+							[0.0,			near/top,		0.0,	0.0 ],
+							[0.0, 			0.0,			q,		-1.0],
+							[0.0,			0.0,			qn,		0.0 ]]);
 }

@@ -67,10 +67,10 @@ class Game {
 		}
 
 		window = new Window;
-		
+
 		GLVersion glVersion = DerelictGL3.reload();
 		if(glVersion < glRequiredVersion) {
-			throw new Error("Unable to create OpenGL " ~ to!string(glMajorVersion) ~ 
+			throw new Error("Unable to create OpenGL " ~ to!string(glMajorVersion) ~
 				"." ~ to!string(glMinorVersion) ~ " or higher context. Please try updating your graphics drivers.");
 		}
 
