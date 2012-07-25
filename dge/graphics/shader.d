@@ -226,12 +226,12 @@ private string defaultVertexShaderText = `
 uniform mat4 modelview;
 uniform mat4 projection;
 
-in vec4 position;
-in vec4 normal;
-in vec4 texCoord;
+in vec3 position;
+in vec3 normal;
+in vec2 texCoord;
 
 void main() {
-	gl_Position = projection * modelview * position;
+	gl_Position = vec4(0, 0, 0, 1);//projection * modelview * position;
 }
 `;
 

@@ -260,10 +260,10 @@ TransformMatrix perspectiveMatrix(float aspectRatio, float angle, float near, fl
 	float q = -(far + near) / depth;
 	float qn = -2 * (far * near) / depth;
 
-
-	return /+scaleMatrix(Vector3(1.0/12.0, 1.0/12.0, 1.0/12.0));+/
-			TransformMatrix([[near/right,	0.0,			0.0,	0.0 ],
+	//For debugging, just return an orthographic projection.
+	return scaleMatrix(Vector3(1.0/12.0, 1.0/12.0, 1.0/12.0));
+			/+TransformMatrix([[near/right,	0.0,			0.0,	0.0 ],
 							[0.0,			near/top,		0.0,	0.0 ],
 							[0.0, 			0.0,			q,		-1.0],
-							[0.0,			0.0,			qn,		0.0 ]]);
+							[0.0,			0.0,			qn,		0.0 ]]);+/
 }
