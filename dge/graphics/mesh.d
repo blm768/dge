@@ -96,7 +96,7 @@ class Mesh {
 				texCoordVbo.enable();
 			}
 			elementArray.bind();
-			glDrawElements(GL_POINTS, cast(int)faces.length * 3, GL_UNSIGNED_INT, null);
+			glDrawElements(GL_TRIANGLES, cast(int)faces.length * 3, GL_UNSIGNED_INT, null);
 			posVbo.disable();
 			normalVbo.disable();
 			texCoordVbo.disable();

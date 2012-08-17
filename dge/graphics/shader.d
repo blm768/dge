@@ -231,7 +231,7 @@ in vec3 normal;
 in vec2 texCoord;
 
 void main() {
-	gl_Position = vec4(0, 0, 0, 1);//projection * modelview * position;
+	gl_Position = projection * modelview * vec4(position, 1.0);
 }
 `;
 
@@ -244,12 +244,12 @@ void main() {
 }
 
 private string defaultFragmentShaderText = `
-#version 330 compatibility
+#version 330
 
-//out vec4 fragColor;
+out vec4 fragColor;
 
 void main() {
-	gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	fragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
 `;
 

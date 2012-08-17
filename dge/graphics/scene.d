@@ -284,9 +284,9 @@ class MeshNode: Node {
 		this.mesh = mesh;
 	}
 
-	/+override void update() {
+	override void update() {
 		rotation = rotation * rotationMatrix(0.0, 0.05, 0.0);
-	}+/
+	}
 
 	override void draw() {
 		mesh.draw(scene, worldTransform, false);

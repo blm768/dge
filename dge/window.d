@@ -18,6 +18,9 @@ To do: remove default window size?
 +/
 class Window {
 	this(uint width = 800, uint height = 600) {
+		_width = width;
+		_height = height;
+
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glMajorVersion);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glMinorVersion);
 
