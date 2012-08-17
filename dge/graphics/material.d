@@ -130,10 +130,14 @@ class Material {
 
 	To do: make use() handle some shader stuff?
 	+/
-	void use() {
+	void use(DGEShaderProgram program) {
 		if(transparent) {
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		if(texture) {
+			texture.bind(0);
+			program.setUniform(texture, 0);
 		}
 	}
 
@@ -142,17 +146,20 @@ class Material {
 	+/
 	void finish() {
 		glDisable(GL_BLEND);
+		if(texture) {
+			texture.unbind(0);
+		}
 	}
 
 	Texture texture;
 	@property FragmentShader fragShader() {
 		return _fragShader;
 	}
-	
+
 	@property VertexShader vertShader() {
 		return _vertShader;
 	}
-	
+
 	@property DGEShaderProgram program() {
 		return _program;
 	}
@@ -164,7 +171,7 @@ class Material {
 	void setProgram() {
 		_program = ShaderProgram.getProgram!DGEShaderProgram(ShaderGroup(vertShader, fragShader));
 	}
-	
+
 	VertexShader _vertShader;
 	FragmentShader _fragShader;
 	DGEShaderProgram _program;
@@ -184,8 +191,8 @@ class Texture {
 		SDL_Surface* surface = null;
 		char[] mName = filename.dup ~ '\0';
 		if((surface = IMG_Load(mName.ptr)) != null) {
-			glGenTextures(1, &texName);
-			glBindTexture(GL_TEXTURE_2D, texName);
+			glGenTextures(1, &_id);
+			glBindTexture(GL_TEXTURE_2D, _id);
 			GLint mode = GL_RGB;
 			if(surface.format.BytesPerPixel == 4) {
 				mode = GL_RGBA;
@@ -199,21 +206,29 @@ class Texture {
 			throw new TextureLoadError("Unable to open file \"" ~ filename ~ "\".");
 		}
 	}
-	void bind() {
-		glBindTexture(GL_TEXTURE_2D, texName);
+
+	//To do: check GL_MAX_COMBINED_TEXTURE_UNITS.
+	void bind(uint unit) {
+		glActiveTexture(GL_TEXTURE0 + unit);
+		glBindTexture(GL_TEXTURE_2D, _id);
 	}
 
-	void unbind() {
+	void unbind(uint unit) {
+		glActiveTexture(GL_TEXTURE0 + unit);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	@property int id() pure const {
+		return _id;
+	}
+
 	~this() {
-		glDeleteTextures(1, &texName);
+		glDeleteTextures(1, &_id);
 	}
 
 	bool transparent;
 
 	private:
-	GLuint texName;
+	GLuint _id;
 
 }

@@ -77,6 +77,13 @@ class ShaderProgram {
 		}
 	}
 
+	void setUniform(Texture tex, int uniform) {
+		if(uniform > -1) {
+			use();
+			glUniform1i(uniform, tex.id);
+		}
+	}
+
 	void finish() {
 		glUseProgram(0);
 	}
@@ -230,8 +237,13 @@ in vec3 position;
 in vec3 normal;
 in vec2 texCoord;
 
+out vec3 fragNormal;
+out vec2 fragTexCoord;
+
 void main() {
 	gl_Position = projection * modelview * vec4(position, 1.0);
+	fragNormal = normal;
+	fragTexCoord = texCoord;
 }
 `;
 
@@ -246,10 +258,15 @@ void main() {
 private string defaultFragmentShaderText = `
 #version 330
 
+uniform sampler2D surface;
+
+in vec3 fragNormal;
+in vec2 fragTexCoord;
+
 out vec4 fragColor;
 
 void main() {
-	fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	fragColor = texture(surface, fragTexCoord);
 }
 `;
 
@@ -268,9 +285,11 @@ struct MaterialUniformLocations {
 		specular = program.getUniformLocation("specularColor");
 		emission =  program.getUniformLocation("emissionColor");
 		shininess = program.getUniformLocation("shininess");
+
+		surface = program.getUniformLocation("surface");
 	}
 
-	int diffuse, ambient, specular, emission, shininess;
+	int diffuse, ambient, specular, emission, shininess, surface;
 }
 
 struct VertexUniformLocations {

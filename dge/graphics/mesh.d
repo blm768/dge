@@ -85,6 +85,9 @@ class Mesh {
 			program.use();
 			program.setUniform(modelviewTransform, program.vUniforms.modelview);
 			program.setUniform(scene.activeCamera.projection, program.vUniforms.projection);
+
+			material.use(program);
+
 			vao.bind();
 			//To do: avoid repeating each frame?
 			posVbo.bindToAttribute(program.vAttributes.position);
@@ -96,7 +99,11 @@ class Mesh {
 				texCoordVbo.enable();
 			}
 			elementArray.bind();
+
 			glDrawElements(GL_TRIANGLES, cast(int)faces.length * 3, GL_UNSIGNED_INT, null);
+
+			material.finish();
+
 			posVbo.disable();
 			normalVbo.disable();
 			texCoordVbo.disable();
