@@ -34,7 +34,7 @@ class Mesh {
 
 	public:
 	void draw(Scene scene, TransformMatrix transform, bool useTransparency = true) {
-		const auto modelviewTransform = transform * scene.activeCamera.inverseTransform;
+		const modelviewTransform = scene.activeCamera.inverseWorldTransform * transform;
 		foreach(FaceGroup fg; faceGroups) {
 			fg.draw(scene, modelviewTransform);
 		}

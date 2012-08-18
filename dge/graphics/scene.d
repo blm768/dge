@@ -136,6 +136,7 @@ abstract class Node {
 		_lastPositionUpdate = scene.currentFrame - 1;
 		_lastRotationUpdate = _lastPositionUpdate;
 		_lastTransformUpdate = _lastPositionUpdate;
+		_lastInverseTransformUpdate = _lastPositionUpdate;
 	}
 
 	void onRemoveFromScene() {scene = null;}
@@ -162,16 +163,16 @@ abstract class Node {
 		return _worldTransform;
 	}
 
-	@property TransformMatrix worldInverseTransform() {
+	@property TransformMatrix inverseWorldTransform() {
 		if(_lastInverseTransformUpdate != scene.currentFrame) {
 			if(parent !is scene) {
-				_worldInverseTransform = inverseTransform * parent.worldInverseTransform;
+				_inverseWorldTransform = inverseTransform * parent.inverseWorldTransform;
 			} else {
-				_worldInverseTransform = inverseTransform;
+				_inverseWorldTransform = inverseTransform;
 			}
 			_lastInverseTransformUpdate = scene.currentFrame;
 		}
-		return _worldInverseTransform;
+		return _inverseWorldTransform;
 	}
 
 	@property Vector3 worldPosition() {
@@ -211,7 +212,7 @@ abstract class Node {
 	uint _lastRotationUpdate;
 	TransformMatrix _worldTransform;
 	uint _lastTransformUpdate;
-	TransformMatrix _worldInverseTransform;
+	TransformMatrix _inverseWorldTransform;
 	uint _lastInverseTransformUpdate;
 }
 
@@ -219,9 +220,9 @@ abstract class Node {
 A camera
 +/
 class CameraNode: Node {
-	//To do: replace parameters w/ just the projection matrix.
-	this(GLfloat aspectRatio, GLfloat angle, GLfloat near, GLfloat far) {
-		projection = perspectiveMatrix(aspectRatio, angle, near, far);
+	///
+	this(TransformMatrix projection) {
+		this.projection = projection;
 		passes = [mirrorPass, opaquePass];
 	}
 

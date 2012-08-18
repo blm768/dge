@@ -160,5 +160,4 @@ class Game {
 	StopWatch frameTimer;
 	TickDuration frameDuration;
 	Window window;
-
 }
