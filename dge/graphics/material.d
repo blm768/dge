@@ -138,6 +138,7 @@ class Material {
 		}
 		program.setUniform(program.matUniforms.diffuse, diffuse);
 		if(texture) {
+			writeln("Texture");
 			texture.bind(0);
 			program.setUniform(program.matUniforms.surface, 0);
 		}
@@ -174,7 +175,6 @@ class Material {
 		//To do: optimize for case when program doesn't change?
 		if(tex) {
 			_fragShader = textureFragmentShader;
-			writeln("Texture set");
 		} else {
 			_fragShader = materialFragmentShader;
 		}

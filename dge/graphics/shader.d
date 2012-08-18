@@ -58,7 +58,7 @@ class ShaderProgram {
 		if(uniform > -1) {
 			//glProgramUniform4fv(programId, uniform, 1, &c);
 			use();
-			glUniform3fv(uniform, 1, c.ptr);
+			glUniform4fv(uniform, 1, c.ptr);
 		}
 	}
 
@@ -66,7 +66,7 @@ class ShaderProgram {
 		if(uniform > -1) {
 			//glProgramUniform4fv(programId, uniform, c.length, c.ptr);
 			use();
-			glUniform3fv(uniform, cast(int)c.length, cast(float*)c.ptr);
+			glUniform4fv(uniform, cast(int)c.length, cast(float*)c.ptr);
 		}
 	}
 
@@ -189,7 +189,9 @@ struct ShaderGroup {
 class Shader {
 	this(const(char)[] shader, GLenum type) {
 		shaderId = glCreateShader(type);
-		glShaderSource(shaderId, 1, [shader.ptr].ptr, [cast(int)shader.length].ptr);
+		const(char)*[1] shaderStrings = [shader.ptr];
+		const(int)[1] shaderLengths = [cast(int)shader.length];
+		glShaderSource(shaderId, 1, shaderStrings.ptr, shaderLengths.ptr);
 		glCompileShader(shaderId);
 		int compiled;
 		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compiled);
@@ -266,7 +268,7 @@ in vec2 fragTexCoord;
 out vec4 fragColor;
 
 void main() {
-	fragColor = diffuse;
+	fragColor = diffuse * vec4(fragColor, 0.0, 1.0);
 }
 `;
 
@@ -289,7 +291,7 @@ in vec2 fragTexCoord;
 out vec4 fragColor;
 
 void main() {
-	fragColor = (vec4(fragTexCoord, 0.0, 1.0) + texture(surface, fragTexCoord)) * 0.5;
+	fragColor = (texture(surface, fragTexCoord) + vec4(fragTexCoord, 0.0, 1.0)) * 0.5;
 }
 `;
 
