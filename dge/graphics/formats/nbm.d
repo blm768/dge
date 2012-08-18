@@ -554,13 +554,11 @@ class NBMFile {
 	}
 
 	void processMaterial(TagCompound tagMat) {
-		writeln(tagMat.name);
 		Material mat = new Material;
 
 		auto tagList = cast(TagList)tagMat.get("Diffuse", TagType.List);
 		if(tagList && tagList.elementType == TagType.Float) {
 			mat.diffuse = processColor(tagList, false);
-			writeln(mat.diffuse);
 		}
 
 		//To do: multitexturing

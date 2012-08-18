@@ -138,7 +138,6 @@ class Material {
 		}
 		program.setUniform(program.matUniforms.diffuse, diffuse);
 		if(texture) {
-			writeln("Texture");
 			texture.bind(0);
 			program.setUniform(program.matUniforms.surface, 0);
 		}

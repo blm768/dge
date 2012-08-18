@@ -268,7 +268,7 @@ in vec2 fragTexCoord;
 out vec4 fragColor;
 
 void main() {
-	fragColor = diffuse * vec4(fragColor, 0.0, 1.0);
+	fragColor = diffuse * vec4(fragNormal, 1.0);
 }
 `;
 
@@ -291,7 +291,7 @@ in vec2 fragTexCoord;
 out vec4 fragColor;
 
 void main() {
-	fragColor = (texture(surface, fragTexCoord) + vec4(fragTexCoord, 0.0, 1.0)) * 0.5;
+	fragColor = vec4(fragNormal, 1.0);
 }
 `;
 

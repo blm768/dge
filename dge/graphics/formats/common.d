@@ -1,5 +1,6 @@
 /++
 Common tools for all format loaders
+To do: modify for efficiency
 +/
 module dge.graphics.formats.common;
 

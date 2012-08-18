@@ -85,6 +85,9 @@ def TagString(value = ""):
 	t.value = value
 	return t
 
+def convertCoords(vec):
+	return [vec.x, vec.z, -vec.y]
+
 def write(filename):
 	out = gzip.open(filename, "wb")
 	root = TagCompound()
@@ -140,9 +143,8 @@ def write(filename):
 		tagMesh.value.append(tagTexCoords)
 
 		for v in mesh.vertices:
-			co = v.co
-			tagVertices.value.extend([co.x, co.z, -co.y])
-			tagNormals.value.extend(v.normal)
+			tagVertices.value.extend(convertCoords(v.co))
+			tagNormals.value.extend(convertCoords(v.normal))
 
 		tagTriGroups = TagCompound()
 		tagTriGroups.name = "Triangle groups"
@@ -221,7 +223,7 @@ def write(filename):
 			for face in group:
 				#If using flat shading, write the normal.
 				if not face.use_smooth:
-					tagNormals.value.extend(face.normal)
+					tagNormals.value.extend(convertCoords(face.normal))
 					#We'll deal with actions later.
 					if hasActions:
 						flatFaces.append(face.index)
