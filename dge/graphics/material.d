@@ -4,6 +4,7 @@ Materials, textures, and fragment shaders
 module dge.graphics.material;
 
 import std.file;
+import std.stdio;
 import std.string;
 
 import derelict.opengl3.gl3;
@@ -98,7 +99,7 @@ class Material {
 	public:
 	this() {
 		_vertShader = defaultVertexShader;
-		_fragShader = defaultFragmentShader;
+		_fragShader = materialFragmentShader;
 		setProgram();
 	}
 
@@ -135,9 +136,10 @@ class Material {
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
+		program.setUniform(program.matUniforms.diffuse, diffuse);
 		if(texture) {
 			texture.bind(0);
-			program.setUniform(texture, 0);
+			program.setUniform(program.matUniforms.surface, 0);
 		}
 	}
 
@@ -151,7 +153,6 @@ class Material {
 		}
 	}
 
-	Texture texture;
 	@property FragmentShader fragShader() {
 		return _fragShader;
 	}
@@ -164,6 +165,22 @@ class Material {
 		return _program;
 	}
 
+	@property Texture texture() {
+		return _texture;
+	}
+
+	@property void texture(Texture tex) {
+		_texture = tex;
+		//To do: optimize for case when program doesn't change?
+		if(tex) {
+			_fragShader = textureFragmentShader;
+			writeln("Texture set");
+		} else {
+			_fragShader = materialFragmentShader;
+		}
+		setProgram();
+	}
+
 	//To do: figure out how this will work w/ shaders.
 	bool transparent;
 
@@ -171,6 +188,8 @@ class Material {
 	void setProgram() {
 		_program = ShaderProgram.getProgram!DGEShaderProgram(ShaderGroup(vertShader, fragShader));
 	}
+
+	Texture _texture;
 
 	VertexShader _vertShader;
 	FragmentShader _fragShader;

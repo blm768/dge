@@ -83,8 +83,8 @@ class Mesh {
 		void draw(Scene scene, TransformMatrix modelviewTransform, bool useTransparency = false) {
 			auto program = material.program;
 			program.use();
-			program.setUniform(modelviewTransform, program.vUniforms.modelview);
-			program.setUniform(scene.activeCamera.projection, program.vUniforms.projection);
+			program.setUniform(program.vUniforms.modelview, modelviewTransform);
+			program.setUniform(program.vUniforms.projection, scene.activeCamera.projection);
 
 			material.use(program);
 

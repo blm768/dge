@@ -21,7 +21,7 @@ class Tag:
 		self.type = type
 		self.value = None
 		self.name = None
-		
+
 	def serialize(self):
 		result = bytearray([])
 		serializePrimitive = [
@@ -50,12 +50,12 @@ class Tag:
 					assert t.type == self.payloadType, "Type " + str(self.payloadType) + " expected, not " + str(t.type)
 					result += t.serialize()
 			return result
-			
+
 		#If we get here, it's a TagCompound.
 		for t in self.value:
 			result += t.serializeName() + t.serialize()
 		return result + bytes([0])
-		
+
 	def serializeName(self):
 		return bytearray([self.type]) + struct.pack(">H", len(self.name)) + bytes(self.name, "ascii")
 
@@ -74,12 +74,12 @@ def TagFloat(value):
 	t = Tag(tagFloat)
 	t.value = value
 	return t
-	
+
 def TagInt(value):
 	t = Tag(tagInt)
 	t.value = value
 	return t
-	
+
 def TagString(value = ""):
 	t = Tag(tagString)
 	t.value = value
@@ -92,17 +92,17 @@ def write(filename):
 	tagMeshes = TagCompound()
 	tagMeshes.name = "Meshes"
 	root.value.append(tagMeshes)
-	
+
 	for object in bpy.data.objects:
 		if object.type != "MESH":
 			continue
-		
+
 		mesh = object.to_mesh(bpy.context.scene, True, "PREVIEW")
-			
+
 		tagMesh = TagCompound()
 		tagMesh.name = object.data.name
 		tagMeshes.value.append(tagMesh)
-		
+
 		actionBounds = {}
 		actionTags = {}
 		#Only needed for actions
@@ -125,7 +125,7 @@ def write(filename):
 					actionBounds[actionName] = [None, int(value)]
 
 		hasActions = (len(actionBounds) > 0)
-		
+
 		#Write static mesh data.
 		tagVertices = TagList(tagFloat)
 		tagVertices.name = "Vertices"
@@ -134,24 +134,25 @@ def write(filename):
 		tagNormals = TagList(tagFloat)
 		tagNormals.name = "Vertex normals"
 		tagMesh.value.append(tagNormals)
-		
+
 		tagTexCoords = TagList(tagFloat)
 		tagTexCoords.name = "Texture coordinates"
 		tagMesh.value.append(tagTexCoords)
 
 		for v in mesh.vertices:
-			tagVertices.value.extend(v.co)
+			co = v.co
+			tagVertices.value.extend([co.x, co.z, -co.y])
 			tagNormals.value.extend(v.normal)
-		
+
 		tagTriGroups = TagCompound()
 		tagTriGroups.name = "Triangle groups"
 		tagMesh.value.append(tagTriGroups)
-		
+
 		uvs = None
-		
+
 		if len(mesh.uv_textures) > 0:
 			uvs = mesh.tessface_uv_textures[0]
-		
+
 		faceGroups = {}
 		texPaths = {}
 		if uvs is None:
@@ -177,8 +178,8 @@ def write(filename):
 				if img is not None:
 					filename = os.path.relpath(bpy.path.abspath(img.filepath), filePath)
 				texPaths[img] = filename
-				
-		
+
+
 		#Iterate over face groups.
 		for index, group in faceGroups.items():
 			tagGroup = TagCompound()
@@ -195,7 +196,7 @@ def write(filename):
 			tagN = TagList(tagInt)
 			tagN.name = "Vertex normals"
 			tagGroup.value.append(tagN)
-			
+
 			tagC = TagList(tagInt)
 			tagC.name = "Texture coordinates"
 			if uvs is not None:
@@ -228,13 +229,13 @@ def write(filename):
 				writeTriangle(range(3), face)
 				if len(face.vertices) == 4:
 					writeTriangle([2, 3, 0], face)
-					
+
 		#Handle actions.
 		if hasActions:
 			tagActions = TagCompound()
 			tagActions.name = "Actions"
 			tagMesh.value.append(tagActions)
-			
+
 			for name in actionBounds.keys():
 				tagAction = TagCompound()
 				tagAction.name = name
@@ -245,10 +246,10 @@ def write(filename):
 				tagAction.value.append(tagFrames)
 
 				bounds = actionBounds[name]
-				
+
 				#print(name)
 				#print(bounds[1] - bounds[0])
-				
+
 				#To do: check for None.
 				for frame in range(bounds[0], bounds[1]):
 					tagFrame = TagCompound()
@@ -261,29 +262,29 @@ def write(filename):
 					tagActNormals = TagList(tagFloat)
 					tagActNormals.name = "Vertex normals"
 					tagFrame.value.append(tagActNormals)
-					
+
 					bpy.context.scene.frame_set(frame)
 					frameMesh = object.to_mesh(bpy.context.scene, True, "PREVIEW")
 
 					for v in frameMesh.vertices:
 						tagActVertices.value.extend(v.co)
 						tagActNormals.value.extend(v.normal)
-					
+
 					#Handle flat faces.
 					for index in flatFaces:
 						for co in frameMesh.faces[index].normal:
 							tagActNormals.value.append(co)
-							
+
 					bpy.data.meshes.remove(frameMesh)
-					
+
 		#Remove the temporary mesh.
 		bpy.data.meshes.remove(mesh)
-		
+
 	#Process materials.
 	tagMaterials = TagCompound()
 	tagMaterials.name = "Materials"
 	root.value.append(tagMaterials)
-	
+
 	if uvs is None:
 		#Process materials by Blender material.
 		for mat in bpy.data.materials:
@@ -302,7 +303,7 @@ def write(filename):
 				tagTex = TagString(filename)
 				tagTex.name = "Texture"
 				tagMat.value.append(tagTex)
-		
+
 	out.write(bytes(root.serializeName() + root.serialize()))
 	out.close()
 

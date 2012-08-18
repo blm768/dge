@@ -38,7 +38,7 @@ class ShaderProgram {
 	Use glProgramUniform() if possible.
 	Remove the use() call? (could break some code and eventually won't be needed)
 	+/
-	void setUniform(Vector3 vec, int uniform) {
+	void setUniform(int uniform, Vector3 vec) {
 		if(uniform > -1) {
 			//glProgramUniform3fv(programId, uniform, 1, &vec);
 			use();
@@ -46,7 +46,7 @@ class ShaderProgram {
 		}
 	}
 
-	void setUniform(Vector3[] vec, int uniform) {
+	void setUniform(int uniform, Vector3[] vec) {
 		if(uniform > -1) {
 			//glProgramUniform3fv(programId, uniform, vec.length, vec.ptr);
 			use();
@@ -54,7 +54,7 @@ class ShaderProgram {
 		}
 	}
 
-	void setUniform(Color c, int uniform) {
+	void setUniform(int uniform, Color c) {
 		if(uniform > -1) {
 			//glProgramUniform4fv(programId, uniform, 1, &c);
 			use();
@@ -62,7 +62,7 @@ class ShaderProgram {
 		}
 	}
 
-	void setUniform(Color[] c, int uniform) {
+	void setUniform(int uniform, Color[] c) {
 		if(uniform > -1) {
 			//glProgramUniform4fv(programId, uniform, c.length, c.ptr);
 			use();
@@ -70,17 +70,17 @@ class ShaderProgram {
 		}
 	}
 
-	void setUniform(TransformMatrix mat, int uniform) {
+	void setUniform(int uniform, TransformMatrix mat) {
 		if(uniform > -1) {
 			use();
 			glUniformMatrix4fv(uniform, 1, cast(ubyte)false, mat.ptr);
 		}
 	}
 
-	void setUniform(Texture tex, int uniform) {
+	void setUniform(int uniform, int value) {
 		if(uniform > -1) {
 			use();
-			glUniform1i(uniform, tex.id);
+			glUniform1i(uniform, value);
 		}
 	}
 
@@ -255,7 +255,30 @@ void main() {
 	return shader;
 }
 
-private string defaultFragmentShaderText = `
+private string materialFragmentShaderText = `
+#version 330
+
+uniform vec4 diffuse;
+
+in vec3 fragNormal;
+in vec2 fragTexCoord;
+
+out vec4 fragColor;
+
+void main() {
+	fragColor = diffuse;
+}
+`;
+
+@property FragmentShader materialFragmentShader() {
+	static FragmentShader shader;
+	if(!shader) {
+		shader = new FragmentShader(materialFragmentShaderText);
+	}
+	return shader;
+}
+
+private string textureFragmentShaderText = `
 #version 330
 
 uniform sampler2D surface;
@@ -266,24 +289,24 @@ in vec2 fragTexCoord;
 out vec4 fragColor;
 
 void main() {
-	fragColor = vec4(fragTexCoord, 0.0, 1.0);//texture(surface, fragTexCoord);
+	fragColor = (vec4(fragTexCoord, 0.0, 1.0) + texture(surface, fragTexCoord)) * 0.5;
 }
 `;
 
-@property FragmentShader defaultFragmentShader() {
+@property FragmentShader textureFragmentShader() {
 	static FragmentShader shader;
 	if(!shader) {
-		shader = new FragmentShader(defaultFragmentShaderText);
+		shader = new FragmentShader(textureFragmentShaderText);
 	}
 	return shader;
 }
 
 struct MaterialUniformLocations {
 	this(ShaderProgram program) {
-		diffuse = program.getUniformLocation("diffuseColor");
-		ambient = program.getUniformLocation("ambientColor");
-		specular = program.getUniformLocation("specularColor");
-		emission =  program.getUniformLocation("emissionColor");
+		diffuse = program.getUniformLocation("diffuse");
+		ambient = program.getUniformLocation("ambient");
+		specular = program.getUniformLocation("specular");
+		emission =  program.getUniformLocation("emission");
 		shininess = program.getUniformLocation("shininess");
 
 		surface = program.getUniformLocation("surface");
