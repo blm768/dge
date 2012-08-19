@@ -137,6 +137,7 @@ class Material {
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 		program.setUniform(program.matUniforms.diffuse, diffuse);
+		program.setUniform(program.matUniforms.emission, emission);
 		if(texture) {
 			texture.bind(0);
 			program.setUniform(program.matUniforms.surface, 0);

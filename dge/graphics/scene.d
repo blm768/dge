@@ -286,7 +286,7 @@ class MeshNode: Node {
 	}
 
 	override void update() {
-		rotation = rotation * rotationMatrix(0.0, 0.05, 0.0);
+		rotation = rotationMatrix(0.0, 0.025, 0.0) * rotation;
 	}
 
 	override void draw() {

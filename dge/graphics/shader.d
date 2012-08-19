@@ -261,6 +261,7 @@ private string materialFragmentShaderText = `
 #version 330
 
 uniform vec4 diffuse;
+uniform vec4 emission;
 
 in vec3 fragNormal;
 in vec2 fragTexCoord;
@@ -268,7 +269,7 @@ in vec2 fragTexCoord;
 out vec4 fragColor;
 
 void main() {
-	fragColor = diffuse * vec4(fragNormal, 1.0);
+	fragColor = diffuse + emission;
 }
 `;
 
@@ -291,7 +292,7 @@ in vec2 fragTexCoord;
 out vec4 fragColor;
 
 void main() {
-	fragColor = vec4(fragNormal, 1.0);
+	fragColor = texture(surface, fragTexCoord);
 }
 `;
 

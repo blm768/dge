@@ -49,7 +49,7 @@ class Window {
 				"." ~ to!string(glMinorVersion) ~ " or higher context. Please try updating your graphics drivers.");
 		}
 
-		glClearColor(0.0, 1.0, 0.0, 1.0);
+		glClearColor(0.0, 0.0, 0.0, 0.0);
 		glClearDepth(1.0);
 
 		glEnable(GL_CULL_FACE);

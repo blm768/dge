@@ -29,7 +29,7 @@ class Mesh {
 		vao.bind();
 		posVbo = AttributeArray(3, GL_FLOAT, Vector3.sizeof);
 		normalVbo = AttributeArray(3, GL_FLOAT, Vector3.sizeof);
-		texCoordVbo = AttributeArray(2, GL_FLOAT, Vector3.sizeof);
+		texCoordVbo = AttributeArray(2, GL_FLOAT, TexCoord2.sizeof);
 	}
 
 	public:
@@ -160,7 +160,7 @@ struct Face {
 /--Functions to generate meshes--/
 /-------------------------------+/
 
-Mesh rectangle(GLfloat w, GLfloat h, Texture tex = null) {
+Mesh rectangle(GLfloat w, GLfloat h) {
 	Normal[] normals;
 
 	Mesh m = new Mesh;
@@ -173,11 +173,9 @@ Mesh rectangle(GLfloat w, GLfloat h, Texture tex = null) {
 	m.normals = normals;
 	fg.faces = [Face([2, 1, 0]), Face([0, 3, 2])];
 
+	m.texCoords = [TexCoord2(1, 0), TexCoord2(1, 1), TexCoord2(0, 1), TexCoord2(0, 0)];
+
 	fg.material.setBaseColor(Color(1, 1, 1, 1));
-	if(tex !is null) {
-		m.texCoords = [TexCoord2(1, 1), TexCoord2(1, 0), TexCoord2(0, 0), TexCoord2(0, 1)];
-		fg.material.texture = tex;
-		fg.material.transparent = true;
-	}
+
 	return m;
 }
