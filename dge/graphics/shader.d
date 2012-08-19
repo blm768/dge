@@ -2,6 +2,7 @@ module dge.graphics.shader;
 
 import derelict.opengl3.gl3;
 
+import std.conv;
 import std.stdio;
 import std.string;
 
@@ -106,6 +107,9 @@ class ShaderProgram {
 		glDeleteProgram(programId);
 	}
 
+	/++
+	To do: take shaders rather than a ShaderGroup?
+	+/
 	static ShadeType getProgram(ShadeType = DGEShaderProgram)(ShaderGroup group) {
 		auto program = programs.get(group, null);
 		if(!program) {
@@ -261,7 +265,15 @@ private string materialFragmentShaderText = `
 #version 330
 
 uniform vec4 diffuse;
-uniform vec4 emission;
+uniform vec3 emission;
+
+struct Light {
+	vec3 position;
+	vec3 color;
+};
+
+uniform int numLights;
+uniform Light[` ~ to!string(maxLightsPerObject) ~ `] lights;
 
 in vec3 fragNormal;
 in vec2 fragTexCoord;
@@ -269,7 +281,7 @@ in vec2 fragTexCoord;
 out vec4 fragColor;
 
 void main() {
-	fragColor = diffuse + emission;
+	fragColor = diffuse + vec4(emission, 0.0) * vec4(lights[0].color, 1.0);
 }
 `;
 
@@ -312,10 +324,28 @@ struct MaterialUniformLocations {
 		emission =  program.getUniformLocation("emission");
 		shininess = program.getUniformLocation("shininess");
 
+		numLights = program.getUniformLocation("numLights");
+
+		foreach(size_t i, ref light; lights) {
+			light = LightMemberLocations(program, "lights[" ~ to!string(i) ~ "]");
+		}
+
 		surface = program.getUniformLocation("surface");
 	}
 
-	int diffuse, ambient, specular, emission, shininess, surface;
+	int diffuse, ambient, specular, emission, shininess;
+	int surface;
+	int numLights;
+	LightMemberLocations[maxLightsPerObject] lights;
+}
+
+struct LightMemberLocations {
+	this(ShaderProgram program, const(char)[] name) {
+		position = program.getUniformLocation(name ~ ".position");
+		color = program.getUniformLocation(name ~ ".color");
+	}
+
+	int position, color;
 }
 
 struct VertexUniformLocations {

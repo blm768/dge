@@ -1,5 +1,7 @@
 /++
 Scenegraph objects
+
+To do: use linked-list tree instead of AAs.
 +/
 module dge.graphics.scene;
 
@@ -255,10 +257,10 @@ class CameraNode: Node {
 		}
 	}
 
-	void renderExtended()(Set!RenderPass exceptions) {
+	void renderExtended()(RenderPass exception) {
 		//Run each rendering pass.
 		foreach(RenderPass pass; passes) {
-			if(exceptions.contains(pass))
+			if(pass == exception)
 				continue;
 			Set!Node* layer = pass in scene.renderLayers;
 			if(layer) {
@@ -290,7 +292,7 @@ class MeshNode: Node {
 	}
 
 	override void draw() {
-		mesh.draw(scene, worldTransform, false);
+		mesh.draw(scene, worldTransform, scene.activeCamera.activePass == transparentPass);
 	}
 
 	override void onAddToScene() {

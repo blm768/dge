@@ -8,7 +8,7 @@ import std.conv;
 import derelict.opengl3.gl3;
 
 enum {
-	//Determines whether to use precompiled Derelict libraries instead of recompiling each time
+	//Determines whether to use precompiled Derelict libraries instead of recompiling each time; affects pragma(lib) directives
 	bool useDerelictLibs = false,
 
 	uint glMajorVersion = 3,
@@ -17,6 +17,8 @@ enum {
 	bool useBufferAlpha = false,
 	size_t depthBufferSize = 24,
 	size_t stencilBufferSize = 8,
+
+	size_t maxLightsPerObject = 8,
 }
 
 template DerelictGLVersion(uint major, uint minor) {
