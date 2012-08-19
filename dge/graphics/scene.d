@@ -346,7 +346,6 @@ class AnimatedMeshNode: MeshNode {
 class LightNode: Node {
 	this(Vector3 position, Color diffuse, Color specular = Color(0.0, 0.0, 0.0, 1.0)) {
 		this.position = position;
-		this.ambient = Color(0.0, 0.0, 0.0, 1.0);
 		this.diffuse = diffuse;
 		this.specular = specular;
 	}
@@ -362,4 +361,18 @@ class LightNode: Node {
 	}
 
 	Color ambient, diffuse, specular;
+
+	static void setProgramLights(DGEShaderProgram program, Scene scene) {
+		//Only actually runs once.
+		foreach(LightNode light; scene.lights) {
+			setProgramLight(program, light, 0);
+			break;
+		}
+	}
+
+	static void setProgramLight(DGEShaderProgram program, LightNode light, size_t num) {
+		program.setUniform(program.matUniforms.lights[num].position, light.worldPosition);
+		program.setUniform(program.matUniforms.lights[num].diffuse, light.diffuse);
+		program.setUniform(program.matUniforms.lights[num].ambient, light.ambient);
+	}
 }

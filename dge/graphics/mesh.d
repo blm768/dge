@@ -34,9 +34,8 @@ class Mesh {
 
 	public:
 	void draw(Scene scene, TransformMatrix transform, bool useTransparency = true) {
-		const modelviewTransform = scene.activeCamera.inverseWorldTransform * transform;
 		foreach(FaceGroup fg; faceGroups) {
-			fg.draw(scene, modelviewTransform);
+			fg.draw(scene, transform);
 		}
 	}
 
@@ -80,13 +79,15 @@ class Mesh {
 			this(mat);
 		}
 
-		void draw(Scene scene, TransformMatrix modelviewTransform, bool useTransparency = false) {
+		void draw(Scene scene, TransformMatrix model, bool useTransparency = false) {
 			auto program = material.program;
 			program.use();
-			program.setUniform(program.vUniforms.modelview, modelviewTransform);
+			program.setUniform(program.vUniforms.model, model);
+			program.setUniform(program.vUniforms.view, scene.activeCamera.inverseWorldTransform);
 			program.setUniform(program.vUniforms.projection, scene.activeCamera.projection);
 
 			material.use(program);
+			LightNode.setProgramLights(program, scene);
 
 			vao.bind();
 			//To do: avoid repeating each frame?

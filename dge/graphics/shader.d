@@ -236,19 +236,20 @@ class FragmentShader: Shader {
 private string defaultVertexShaderText = `
 #version 330
 
-uniform mat4 modelview;
-uniform mat4 projection;
+uniform mat4 model, view, projection;
 
 in vec3 position;
 in vec3 normal;
 in vec2 texCoord;
 
+out vec4 fragViewPosition;
 out vec3 fragNormal;
 out vec2 fragTexCoord;
 
 void main() {
-	gl_Position = projection * modelview * vec4(position, 1.0);
-	fragNormal = normal;
+	fragViewPosition = view * model * vec4(position, 1.0);
+	gl_Position = projection * fragViewPosition;
+	fragNormal = vec3(view * model * vec4(normal, 0.0));
 	fragTexCoord = texCoord;
 }
 `;
@@ -264,24 +265,36 @@ void main() {
 private string materialFragmentShaderText = `
 #version 330
 
+uniform mat4 view, projection;
+
 uniform vec4 diffuse;
 uniform vec3 emission;
 
+in vec4 fragViewPosition;
+
 struct Light {
 	vec3 position;
-	vec3 color;
+	vec4 diffuse;
+	vec4 ambient;
 };
 
 uniform int numLights;
 uniform Light[` ~ to!string(maxLightsPerObject) ~ `] lights;
 
 in vec3 fragNormal;
-in vec2 fragTexCoord;
+
+//To do: figure out how to handle material's ambient color.
+vec3 lighting(const Light light) {
+	vec3 fragmentToLight = vec3(view * vec4(light.position, 1.0) - fragViewPosition);
+	return fragmentToLight;
+	//return vec3(light.diffuse) * dot(fragNormal, fragmentToLight);
+}
 
 out vec4 fragColor;
 
 void main() {
-	fragColor = diffuse + vec4(emission, 0.0) * vec4(lights[0].color, 1.0);
+	//To do: optimize conversions.
+	fragColor = diffuse * vec4(lighting(lights[0]), 1.0) + vec4(emission, 0.0);
 }
 `;
 
@@ -342,19 +355,21 @@ struct MaterialUniformLocations {
 struct LightMemberLocations {
 	this(ShaderProgram program, const(char)[] name) {
 		position = program.getUniformLocation(name ~ ".position");
-		color = program.getUniformLocation(name ~ ".color");
+		diffuse = program.getUniformLocation(name ~ ".diffuse");
+		ambient = program.getUniformLocation(name ~ ".ambient");
 	}
 
-	int position, color;
+	int position, diffuse, ambient;
 }
 
 struct VertexUniformLocations {
 	this(ShaderProgram program) {
-		modelview = program.getUniformLocation("modelview");
+		model = program.getUniformLocation("model");
+		view = program.getUniformLocation("view");
 		projection = program.getUniformLocation("projection");
 	}
 
-	int modelview, projection;
+	int model, view, projection;
 }
 
 struct VertexAttributeLocations {
