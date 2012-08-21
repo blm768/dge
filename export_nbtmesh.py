@@ -100,6 +100,7 @@ def write(filename):
 		if object.type != "MESH":
 			continue
 
+		#Apply modifiers.
 		mesh = object.to_mesh(bpy.context.scene, True, "PREVIEW")
 
 		tagMesh = TagCompound()
@@ -152,85 +153,84 @@ def write(filename):
 
 		uvs = None
 
-		if len(mesh.uv_textures) > 0:
+		if len(mesh.tessface_uv_textures) > 0:
 			uvs = mesh.tessface_uv_textures[0]
 
 		faceGroups = {}
 		texPaths = {}
-		if uvs is None:
-			#Sort faces by material.
-			for f in mesh.tessfaces:
-				if f.material_index in faceGroups:
-					faceGroups[f.material_index].append(f)
-				else:
-					faceGroups[f.material_index] = [f]
-		else:
-			#Sort faces by texture.
-			for f in mesh.tessfaces:
-				img = uvs.data[f.index].image
-				#To do: optimize
-				if img in faceGroups:
-					faceGroups[img].append(f)
-				else:
-					faceGroups[img] = [f]
-			#Process texture paths.
-			filePath = os.path.dirname(filename)
-			for img in faceGroups.keys():
-				filename = ""
-				if img is not None:
-					filename = os.path.relpath(bpy.path.abspath(img.filepath), filePath)
-				texPaths[img] = filename
+
+		#Sort faces by material and texture.
+		for f in mesh.tessfaces:
+			if not f.material_index in faceGroups:
+				faceGroups[f.material_index] = {}
+			byTexture = faceGroups[f.material_index]
+			tex = None
+			if uvs:
+				tex = uvs.data[f.index].image
+			#To do: optimize
+			if tex in byTexture:
+				byTexture[tex].append(f)
+			else:
+				byTexture[tex] = [f]
+
+#			#Process texture paths.
+#			filePath = os.path.dirname(filename)
+#			for img in faceGroups.keys():
+#				filename = ""
+#				if img is not None:
+#					filename = os.path.relpath(bpy.path.abspath(img.filepath), filePath)
+#				texPaths[img] = filename
 
 
 		#Iterate over face groups.
-		for index, group in faceGroups.items():
-			tagGroup = TagCompound()
-			if uvs is None:
+		for index, byTexture in faceGroups.items():
+			for texture, group in byTexture.items():
+				tagGroup = TagCompound()
 				tagGroup.name = mesh.materials[index].name
-			else:
-				tagGroup.name = texPaths[index]
-			tagTriGroups.value.append(tagGroup)
+				if texture is not None:
+					tagGroup.name = tagGroup.name + " (" + bpy.path.relpath(texture.filepath)[2:] + ")"
+				tagTriGroups.value.append(tagGroup)
 
-			tagV = TagList(tagInt)
-			tagV.name = "Vertices"
-			tagGroup.value.append(tagV)
+				tagV = TagList(tagInt)
+				tagV.name = "Vertices"
+				tagGroup.value.append(tagV)
 
-			tagN = TagList(tagInt)
-			tagN.name = "Vertex normals"
-			tagGroup.value.append(tagN)
+				tagN = TagList(tagInt)
+				tagN.name = "Vertex normals"
+				tagGroup.value.append(tagN)
 
-			tagC = TagList(tagInt)
-			tagC.name = "Texture coordinates"
-			if uvs is not None:
-				tagGroup.value.append(tagC)
+				tagC = TagList(tagInt)
+				tagC.name = "Texture coordinates"
+				if uvs is not None:
+					tagGroup.value.append(tagC)
 
-			#Used for triangulation
-			#To do: avoid texture coordinate duplication caused by triangulation.
-			def writeTriangle(vertexNumbers, face):
-				for vn in vertexNumbers:
-					v = face.vertices[vn]
-					tagV.value.append(v)
-					if(face.use_smooth):
-						#The vertex and normal indices will match.
-						tagN.value.append(v)
-					else:
-						tagN.value.append(len(tagNormals.value) // 3 - 1)
-					#Write UVs.
-					if uvs is not None:
-						u, v = uvs.data[face.index].uv[vn]
-						tagTexCoords.value.extend([u, v])
-						tagC.value.append(len(tagTexCoords.value) // 2 - 1)
-			for face in group:
-				#If using flat shading, write the normal.
-				if not face.use_smooth:
-					tagNormals.value.extend(convertCoords(face.normal))
-					#We'll deal with actions later.
-					if hasActions:
-						flatFaces.append(face.index)
-				#If this is a quad, add another triangle to fill it out.
-				writeTriangle(range(3), face)
-				if len(face.vertices) == 4:
-					writeTriangle([2, 3, 0], face)
+				#Used for triangulation
+				#To do: avoid texture coordinate duplication caused by triangulation.
+				def writeTriangle(vertexNumbers, face):
+					for vn in vertexNumbers:
+						v = face.vertices[vn]
+						tagV.value.append(v)
+						if(face.use_smooth):
+							#The vertex and normal indices will match.
+							tagN.value.append(v)
+						else:
+							tagN.value.append(len(tagNormals.value) // 3 - 1)
+						#Write UVs.
+						if uvs is not None:
+							u, v = uvs.data[face.index].uv[vn]
+							tagTexCoords.value.extend([u, v])
+							tagC.value.append(len(tagTexCoords.value) // 2 - 1)
+				for face in group:
+					#If using flat shading, write the normal.
+					if not face.use_smooth:
+						tagNormals.value.extend(convertCoords(face.normal))
+						#We'll deal with actions later.
+						if hasActions:
+							flatFaces.append(face.index)
+					#If this is a quad, add another triangle to fill it out.
+					writeTriangle(range(3), face)
+					if len(face.vertices) == 4:
+						writeTriangle([2, 3, 0], face)
 
 		#Handle actions.
 		if hasActions:
@@ -287,24 +287,29 @@ def write(filename):
 	tagMaterials.name = "Materials"
 	root.value.append(tagMaterials)
 
-	if uvs is None:
-		#Process materials by Blender material.
-		for mat in bpy.data.materials:
-			tagMat = TagCompound()
-			tagMat.name = mat.name
+	def materialToTag(mat):
+		tagMat = TagCompound()
+		tagMat.name = mat.name
+		tagMaterials.value.append(tagMat)
+		tagMat.value.append(colorToTag(mat.diffuse_color, "Diffuse"))
+		tagMat.value.append(colorToTag(mat.specular_color, "Specular"))
+		tagShininess = TagFloat(float(mat.specular_hardness))
+		tagShininess.name = "Shininess"
+		tagMat.value.append(tagShininess)
+		return tagMat
+
+	for index, byTexture in faceGroups.items():
+		for texture in byTexture.keys():
+			#Process materials.
+			mat = bpy.data.materials[index]
+			tagMat = materialToTag(mat)
 			tagMaterials.value.append(tagMat)
-			tagMat.value.append(colorToTag(mat.diffuse_color, "Diffuse"))
-	else:
-		#Process materials by texture.
-		for filename in texPaths.values():
-			tagMat = TagCompound()
-			tagMat.name = filename;
-			tagMaterials.value.append(tagMat)
-			tagMat.value.append(colorToTag([1.0, 1.0, 1.0], "Diffuse"))
-			if filename != "":
+			if texture is not None:
+				filename = bpy.path.relpath(texture.filepath)[2:]
 				tagTex = TagString(filename)
 				tagTex.name = "Texture"
 				tagMat.value.append(tagTex)
+				tagMat.name = tagMat.name + " (" + filename + ")"
 
 	out.write(bytes(root.serializeName() + root.serialize()))
 	out.close()

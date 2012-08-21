@@ -138,6 +138,7 @@ class Material {
 		}
 		program.setUniform(program.matUniforms.diffuse, diffuse);
 		program.setUniform(program.matUniforms.emission, emission);
+		program.setUniform(program.matUniforms.shininess, shininess);
 		if(texture) {
 			texture.bind(0);
 			program.setUniform(program.matUniforms.useTexture, true);

@@ -358,7 +358,7 @@ class LightNode: Node {
 
 	Color ambient, diffuse, specular;
 	Vector3 direction = Vector3(0.0, 0.0, -1.0);
-	float spotCutoff = 0.0;
+	float spotCutoff = 2.0;
 	float quadraticAttenuation = 0.0;
 	float spotExponent = 0.0;
 
@@ -375,6 +375,7 @@ class LightNode: Node {
 		program.setUniform(program.matUniforms.lights[num].position, light.worldPosition);
 		program.setUniform(program.matUniforms.lights[num].diffuse, light.diffuse);
 		program.setUniform(program.matUniforms.lights[num].ambient, light.ambient);
+		program.setUniform(program.matUniforms.lights[num].specular, light.specular);
 
 		program.setUniform(program.matUniforms.lights[num].direction, light.worldRotation * light.direction);
 		program.setUniform(program.matUniforms.lights[num].spotCutoff, light.spotCutoff);

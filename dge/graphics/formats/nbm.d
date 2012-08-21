@@ -561,6 +561,11 @@ class NBMFile {
 			mat.diffuse = processColor(tagList, false);
 		}
 
+		tagList = cast(TagList)tagMat.get("Specular", TagType.List);
+		if(tagList && tagList.elementType == TagType.Float) {
+			mat.specular = processColor(tagList, false);
+		}
+
 		//To do: multitexturing
 		auto tagString = cast(TagString)tagMat.get("Texture", TagType.String);
 		if(tagString) {

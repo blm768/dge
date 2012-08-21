@@ -282,16 +282,16 @@ private string materialFragmentShaderText = `
 uniform mat4 view, projection;
 
 uniform vec4 diffuse, specular, ambient, emission;
+uniform float shininess;
 
 uniform bool useTexture;
 uniform sampler2D surface;
-
-in vec4 fragViewPosition;
 
 struct Light {
 	vec3 position;
 	vec4 diffuse;
 	vec4 ambient;
+	vec4 specular;
 	vec3 direction;
 	float spotCutoff;
 	float quadraticAttenuation;
@@ -301,12 +301,13 @@ struct Light {
 uniform int numLights;
 uniform Light[` ~ to!string(maxLightsPerObject) ~ `] lights;
 
+in vec4 fragViewPosition;
 in vec3 fragNormal;
 in vec2 fragTexCoord;
 
 //To do: figure out how to handle material's ambient color.
 //To do: remove conditionals?
-vec3 lighting(const Light light) {
+vec3 lighting(const Light light, vec3 color) {
 	//Is this a directional (sun) light?
 	if(light.spotCutoff <= 0.0) {
 		return (light.diffuse * max(0.0, dot(fragNormal, view * -vec4(light.direction, 0.0)))).rgb;
@@ -329,7 +330,17 @@ vec3 lighting(const Light light) {
 	}
 
 	vec3 lighting = light.diffuse.rgb * max(0.0, dot(fragNormal, direction)) * attenuation;
-	return lighting;
+
+	//Calculate specular reflection.
+	vec3 specularLighting;
+	if(dot(fragNormal, direction) > 0.0) {
+		specularLighting = attenuation * vec3(light.specular) *
+			pow(max(0.0, dot(reflect(-direction, fragNormal), normalize(fragViewPosition.xyz))), shininess);
+	} else {
+		specularLighting = vec3(0.0, 0.0, 0.0);
+	}
+
+	return color * lighting + specular.rgb * specularLighting;
 }
 
 out vec4 fragColor;
@@ -340,7 +351,7 @@ void main() {
 		fragColor *= texture(surface, fragTexCoord);
 	}
 	//To do: optimize conversions.
-	fragColor *= vec4(lighting(lights[0]), 1.0);
+	fragColor = vec4(lighting(lights[0], fragColor.xyz), 1.0);
 	fragColor.xyz += emission.xyz;
 }
 `;
@@ -382,13 +393,15 @@ struct LightMemberLocations {
 		position = program.getUniformLocation(name ~ ".position");
 		diffuse = program.getUniformLocation(name ~ ".diffuse");
 		ambient = program.getUniformLocation(name ~ ".ambient");
+		specular = program.getUniformLocation(name ~ ".specular");
+
 		direction = program.getUniformLocation(name ~ ".direction");
 		spotCutoff = program.getUniformLocation(name ~ ".spotCutoff");
 		quadraticAttenuation = program.getUniformLocation(name ~ ".quadraticAttenuation");
 		spotExponent = program.getUniformLocation(name ~ ".spotExponent");
 	}
 
-	int position, diffuse, ambient;
+	int position, diffuse, ambient, specular;
 	int direction, spotCutoff, quadraticAttenuation, spotExponent;
 }
 
