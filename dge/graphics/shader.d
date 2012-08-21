@@ -257,13 +257,13 @@ in vec3 normal;
 in vec2 texCoord;
 
 out vec4 fragViewPosition;
-out vec3 fragNormal;
+out vec3 fragViewNormal;
 out vec2 fragTexCoord;
 
 void main() {
 	fragViewPosition = view * model * vec4(position, 1.0);
 	gl_Position = projection * fragViewPosition;
-	fragNormal = vec3(view * model * vec4(normal, 0.0));
+	fragViewNormal = vec3(view * model * vec4(normal, 0.0));
 	fragTexCoord = texCoord;
 }
 `;
@@ -281,7 +281,7 @@ private string materialFragmentShaderText = `
 
 uniform mat4 view, projection;
 
-uniform vec4 diffuse, specular, ambient, emission;
+uniform vec4 diffuse, specular, emission;
 uniform float shininess;
 
 uniform bool useTexture;
@@ -302,18 +302,19 @@ uniform int numLights;
 uniform Light[` ~ to!string(maxLightsPerObject) ~ `] lights;
 
 in vec4 fragViewPosition;
-in vec3 fragNormal;
+in vec3 fragViewNormal;
 in vec2 fragTexCoord;
 
 //To do: figure out how to handle material's ambient color.
 //To do: remove conditionals?
+//To do:
 vec3 lighting(const Light light, vec3 color) {
 	//Is this a directional (sun) light?
 	if(light.spotCutoff <= 0.0) {
-		return (light.diffuse * max(0.0, dot(fragNormal, view * -vec4(light.direction, 0.0)))).rgb;
+		return (light.diffuse * max(0.0, dot(fragViewNormal, view * -vec4(light.direction, 0.0)))).rgb;
 	} //else
 
-	vec3 fragmentToLight = vec3(view * vec4(light.position, 1.0) - fragViewPosition);
+	vec3 fragmentToLight = (view * vec4(light.position, 1.0) - fragViewPosition).xyz;
 	float distSquared = dot(fragmentToLight, fragmentToLight);
 	float attenuation = 1 / (light.quadraticAttenuation * distSquared);
 	vec3 direction = normalize(fragmentToLight);
@@ -329,18 +330,21 @@ vec3 lighting(const Light light, vec3 color) {
 		}
 	}
 
-	vec3 lighting = light.diffuse.rgb * max(0.0, dot(fragNormal, direction)) * attenuation;
+	vec3 lighting = light.diffuse.rgb * max(0.0, dot(fragViewNormal, direction)) * attenuation;
 
 	//Calculate specular reflection.
+	//To do: automatically cut out for objects/lights with no specular?
 	vec3 specularLighting;
-	if(dot(fragNormal, direction) > 0.0) {
+
+	//Is the light coming from the right side?
+	if(dot(fragViewNormal, direction) > 0.0) {
 		specularLighting = attenuation * vec3(light.specular) *
-			pow(max(0.0, dot(reflect(-direction, fragNormal), normalize(fragViewPosition.xyz))), shininess);
+			pow(max(0.0, dot(reflect(-direction, fragViewNormal), -normalize(fragViewPosition.xyz))), shininess);
 	} else {
 		specularLighting = vec3(0.0, 0.0, 0.0);
 	}
 
-	return color * lighting + specular.rgb * specularLighting;
+	return color * (lighting + light.ambient.xyz) + specular.rgb * specularLighting;
 }
 
 out vec4 fragColor;
@@ -351,8 +355,8 @@ void main() {
 		fragColor *= texture(surface, fragTexCoord);
 	}
 	//To do: optimize conversions.
-	fragColor = vec4(lighting(lights[0], fragColor.xyz), 1.0);
-	fragColor.xyz += emission.xyz;
+	fragColor = vec4(lighting(lights[0], fragColor.rgb), diffuse.a);
+	fragColor.rgb += emission.rgb;
 }
 `;
 
@@ -367,7 +371,6 @@ void main() {
 struct MaterialUniformLocations {
 	this(ShaderProgram program) {
 		diffuse = program.getUniformLocation("diffuse");
-		ambient = program.getUniformLocation("ambient");
 		specular = program.getUniformLocation("specular");
 		emission =  program.getUniformLocation("emission");
 		shininess = program.getUniformLocation("shininess");
@@ -382,7 +385,7 @@ struct MaterialUniformLocations {
 		useTexture = program.getUniformLocation("useTexture");
 	}
 
-	int diffuse, ambient, specular, emission, shininess;
+	int diffuse, specular, emission, shininess;
 	int surface, useTexture;
 	int numLights;
 	LightMemberLocations[maxLightsPerObject] lights;

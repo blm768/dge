@@ -566,6 +566,16 @@ class NBMFile {
 			mat.specular = processColor(tagList, false);
 		}
 
+		tagList = cast(TagList)tagMat.get("Emission", TagType.List);
+		if(tagList && tagList.elementType == TagType.Float) {
+			mat.emission = processColor(tagList, false);
+		}
+
+		auto tagFloat = cast(TagFloat)tagMat.get("Shininess", TagType.Float);
+		if(tagFloat) {
+			mat.shininess = tagFloat.value;
+		}
+
 		//To do: multitexturing
 		auto tagString = cast(TagString)tagMat.get("Texture", TagType.String);
 		if(tagString) {

@@ -7,6 +7,8 @@ Group: 'Export'
 Tooltip 'NBTMesh exporter'
 """
 
+#To do: determine origin of duplicate material outputs
+
 import gzip
 import os.path
 from types import *
@@ -96,6 +98,8 @@ def write(filename):
 	tagMeshes.name = "Meshes"
 	root.value.append(tagMeshes)
 
+	materials = set()
+
 	for object in bpy.data.objects:
 		if object.type != "MESH":
 			continue
@@ -159,11 +163,13 @@ def write(filename):
 		faceGroups = {}
 		texPaths = {}
 
+		print("Sorting:")
 		#Sort faces by material and texture.
 		for f in mesh.tessfaces:
-			if not f.material_index in faceGroups:
-				faceGroups[f.material_index] = {}
-			byTexture = faceGroups[f.material_index]
+			mat = mesh.materials[f.material_index]
+			if not mat in faceGroups:
+				faceGroups[mat] = {}
+			byTexture = faceGroups[mat]
 			tex = None
 			if uvs:
 				tex = uvs.data[f.index].image
@@ -172,6 +178,7 @@ def write(filename):
 				byTexture[tex].append(f)
 			else:
 				byTexture[tex] = [f]
+			materials.add((mat, tex))
 
 #			#Process texture paths.
 #			filePath = os.path.dirname(filename)
@@ -183,10 +190,10 @@ def write(filename):
 
 
 		#Iterate over face groups.
-		for index, byTexture in faceGroups.items():
+		for mat, byTexture in faceGroups.items():
 			for texture, group in byTexture.items():
 				tagGroup = TagCompound()
-				tagGroup.name = mesh.materials[index].name
+				tagGroup.name = mat.name
 				if texture is not None:
 					tagGroup.name = tagGroup.name + " (" + bpy.path.relpath(texture.filepath)[2:] + ")"
 				tagTriGroups.value.append(tagGroup)
@@ -282,6 +289,7 @@ def write(filename):
 		#Remove the temporary mesh.
 		bpy.data.meshes.remove(mesh)
 
+
 	#Process materials.
 	tagMaterials = TagCompound()
 	tagMaterials.name = "Materials"
@@ -298,18 +306,17 @@ def write(filename):
 		tagMat.value.append(tagShininess)
 		return tagMat
 
-	for index, byTexture in faceGroups.items():
-		for texture in byTexture.keys():
-			#Process materials.
-			mat = bpy.data.materials[index]
-			tagMat = materialToTag(mat)
-			tagMaterials.value.append(tagMat)
-			if texture is not None:
-				filename = bpy.path.relpath(texture.filepath)[2:]
-				tagTex = TagString(filename)
-				tagTex.name = "Texture"
-				tagMat.value.append(tagTex)
-				tagMat.name = tagMat.name + " (" + filename + ")"
+	print("Materials")
+	for mat, texture in materials:
+		#Process materials.
+		tagMat = materialToTag(mat)
+		tagMaterials.value.append(tagMat)
+		if texture is not None:
+			filename = bpy.path.relpath(texture.filepath)[2:]
+			tagTex = TagString(filename)
+			tagTex.name = "Texture"
+			tagMat.value.append(tagTex)
+			tagMat.name = tagMat.name + " (" + filename + ")"
 
 	out.write(bytes(root.serializeName() + root.serialize()))
 	out.close()
@@ -330,7 +337,7 @@ class Exporter(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        true
+        return True
 
     def execute(self, context):
         write(self.filepath)

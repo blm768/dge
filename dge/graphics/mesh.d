@@ -176,7 +176,7 @@ Mesh rectangle(GLfloat w, GLfloat h) {
 
 	m.texCoords = [TexCoord2(1, 0), TexCoord2(1, 1), TexCoord2(0, 1), TexCoord2(0, 0)];
 
-	fg.material.setBaseColor(Color(1, 1, 1, 1));
+	fg.material.diffuse = fg.material.specular = Color(1, 1, 1, 1);
 
 	return m;
 }

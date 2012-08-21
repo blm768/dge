@@ -47,7 +47,6 @@ Represents an OpenGL color
 If it is not initialized, it will be fully transparent black.
 +/
 struct Color {
-	GLfloat[4] values = [0f, 0f, 0f, 1f];
 	@property GLfloat* ptr() {return values.ptr;}
 
 	this(float r, float g, float b, float a = 1.0) {
@@ -57,36 +56,11 @@ struct Color {
 		this.a = a;
 	}
 
-	@property GLfloat r() pure const {
-		return values[0];
-	}
-
-	@property void r(GLfloat r) {
-		values[0] = r;
-	}
-
-	@property GLfloat g() pure const {
-		return values[1];
-	}
-
-	@property void g(GLfloat g) {
-		values[1] = g;
-	}
-
-	@property GLfloat b() pure const {
-		return values[2];
-	}
-
-	@property void b(GLfloat b) {
-		values[2] = b;
-	}
-
-	@property GLfloat a() pure const {
-		return values[3];
-	}
-
-	@property void a(GLfloat a) {
-		values[3] = a;
+	union {
+		struct {
+			float r = 0.0, g = 0.0, b = 0.0, a = 1.0;
+		}
+		float[4] values;
 	}
 
 	alias a alpha;
@@ -103,26 +77,17 @@ class Material {
 		setProgram();
 	}
 
-	this(Color diffuse, Color specular, Color emission = Color(), GLfloat shininess = 0.0, Color ambient = diffuse) {
+	this(Color diffuse, Color specular = Color(1f, 1f, 1f), GLfloat shininess = 0.0) {
 		this.diffuse = diffuse;
-		this.ambient = ambient;
 		this.specular = specular;
-		this.emission = emission;
 		this.shininess = shininess;
 		this();
 	}
 
 	Color diffuse;
-	Color ambient;
 	Color specular;
 	Color emission;
 	GLfloat shininess = 0.0;
-	bool usesLighting = true;
-
-	///Sets both diffuse and ambient at once.
-	void setBaseColor(Color c) {
-		diffuse = ambient = c;
-	}
 
 	/++
 	Prepare to draw using this material
@@ -138,6 +103,7 @@ class Material {
 		}
 		program.setUniform(program.matUniforms.diffuse, diffuse);
 		program.setUniform(program.matUniforms.emission, emission);
+		program.setUniform(program.matUniforms.specular, specular);
 		program.setUniform(program.matUniforms.shininess, shininess);
 		if(texture) {
 			texture.bind(0);
