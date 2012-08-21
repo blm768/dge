@@ -24,9 +24,15 @@ class MirrorNode: Node {
 		auto camera = scene.activeCamera;
 		auto projection = camera.projection;
 
-		auto mirrorProjection = translationMatrix(camera.inverseWorldTransform * -worldPosition);
-		mirrorProjection = worldRotation * scaleMatrix(Vector3(1.0, 1.0, -1.0)) * worldRotation.transposed * mirrorProjection;
-		mirrorProjection = projection * translationMatrix(camera.inverseWorldTransform * worldPosition) * mirrorProjection;
+		//Put the scene at the mirror's world-space origin and undo its rotation.
+		auto mirrorProjection =  worldRotation.transposed * translationMatrix(-worldPosition) * camera.worldTransform;
+		//Scale the scene.
+		mirrorProjection = scaleMatrix(Vector3(1.0, 1.0, -1.0)) * mirrorProjection;
+		//Return the scene to its position.
+		mirrorProjection = camera.inverseWorldTransform * translationMatrix(worldPosition) * worldRotation * mirrorProjection;
+		//Apply the normal projection.
+		mirrorProjection = projection * mirrorProjection;
+
 		auto maskProjection = zTransform * projection;
 
 		GLdouble[4] planeValues;

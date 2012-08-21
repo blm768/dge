@@ -78,10 +78,24 @@ class ShaderProgram {
 		}
 	}
 
+	void setUniform(int uniform, float value) {
+		if(uniform > -1) {
+			use();
+			glUniform1f(uniform, value);
+		}
+	}
+
 	void setUniform(int uniform, int value) {
 		if(uniform > -1) {
 			use();
 			glUniform1i(uniform, value);
+		}
+	}
+
+	void setUniform(int uniform, bool value) {
+		if(uniform > -1) {
+			use();
+			glUniform1i(uniform, cast(int)value);
 		}
 	}
 
@@ -267,8 +281,10 @@ private string materialFragmentShaderText = `
 
 uniform mat4 view, projection;
 
-uniform vec4 diffuse;
-uniform vec3 emission;
+uniform vec4 diffuse, specular, ambient, emission;
+
+uniform bool useTexture;
+uniform sampler2D surface;
 
 in vec4 fragViewPosition;
 
@@ -276,25 +292,56 @@ struct Light {
 	vec3 position;
 	vec4 diffuse;
 	vec4 ambient;
+	vec3 direction;
+	float spotCutoff;
+	float quadraticAttenuation;
+	float spotExponent;
 };
 
 uniform int numLights;
 uniform Light[` ~ to!string(maxLightsPerObject) ~ `] lights;
 
 in vec3 fragNormal;
+in vec2 fragTexCoord;
 
 //To do: figure out how to handle material's ambient color.
+//To do: remove conditionals?
 vec3 lighting(const Light light) {
+	//Is this a directional (sun) light?
+	if(light.spotCutoff <= 0.0) {
+		return (light.diffuse * max(0.0, dot(fragNormal, view * -vec4(light.direction, 0.0)))).rgb;
+	} //else
+
 	vec3 fragmentToLight = vec3(view * vec4(light.position, 1.0) - fragViewPosition);
-	return fragmentToLight;
-	//return vec3(light.diffuse) * dot(fragNormal, fragmentToLight);
+	float distSquared = dot(fragmentToLight, fragmentToLight);
+	float attenuation = 1 / (light.quadraticAttenuation * distSquared);
+	vec3 direction = normalize(fragmentToLight);
+
+	//Is it a spotlight?
+	if(light.spotCutoff <= 1.0) {
+		//To do: cache dot product?
+		float clampedCos = max(0.0, dot(-direction, (view * vec4(light.direction, 0.0)).xyz));
+		if(clampedCos < light.spotCutoff) {
+			attenuation = 0.0;
+		} else {
+			attenuation *= pow(clampedCos, light.spotExponent);
+		}
+	}
+
+	vec3 lighting = light.diffuse.rgb * max(0.0, dot(fragNormal, direction)) * attenuation;
+	return lighting;
 }
 
 out vec4 fragColor;
 
 void main() {
+	fragColor = diffuse;
+	if(useTexture) {
+		fragColor *= texture(surface, fragTexCoord);
+	}
 	//To do: optimize conversions.
-	fragColor = diffuse * vec4(lighting(lights[0]), 1.0) + vec4(emission, 0.0);
+	fragColor *= vec4(lighting(lights[0]), 1.0);
+	fragColor.xyz += emission.xyz;
 }
 `;
 
@@ -302,29 +349,6 @@ void main() {
 	static FragmentShader shader;
 	if(!shader) {
 		shader = new FragmentShader(materialFragmentShaderText);
-	}
-	return shader;
-}
-
-private string textureFragmentShaderText = `
-#version 330
-
-uniform sampler2D surface;
-
-in vec3 fragNormal;
-in vec2 fragTexCoord;
-
-out vec4 fragColor;
-
-void main() {
-	fragColor = texture(surface, fragTexCoord);
-}
-`;
-
-@property FragmentShader textureFragmentShader() {
-	static FragmentShader shader;
-	if(!shader) {
-		shader = new FragmentShader(textureFragmentShaderText);
 	}
 	return shader;
 }
@@ -344,10 +368,11 @@ struct MaterialUniformLocations {
 		}
 
 		surface = program.getUniformLocation("surface");
+		useTexture = program.getUniformLocation("useTexture");
 	}
 
 	int diffuse, ambient, specular, emission, shininess;
-	int surface;
+	int surface, useTexture;
 	int numLights;
 	LightMemberLocations[maxLightsPerObject] lights;
 }
@@ -357,9 +382,14 @@ struct LightMemberLocations {
 		position = program.getUniformLocation(name ~ ".position");
 		diffuse = program.getUniformLocation(name ~ ".diffuse");
 		ambient = program.getUniformLocation(name ~ ".ambient");
+		direction = program.getUniformLocation(name ~ ".direction");
+		spotCutoff = program.getUniformLocation(name ~ ".spotCutoff");
+		quadraticAttenuation = program.getUniformLocation(name ~ ".quadraticAttenuation");
+		spotExponent = program.getUniformLocation(name ~ ".spotExponent");
 	}
 
 	int position, diffuse, ambient;
+	int direction, spotCutoff, quadraticAttenuation, spotExponent;
 }
 
 struct VertexUniformLocations {

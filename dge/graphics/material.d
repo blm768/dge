@@ -140,7 +140,10 @@ class Material {
 		program.setUniform(program.matUniforms.emission, emission);
 		if(texture) {
 			texture.bind(0);
+			program.setUniform(program.matUniforms.useTexture, true);
 			program.setUniform(program.matUniforms.surface, 0);
+		} else {
+			program.setUniform(program.matUniforms.useTexture, false);
 		}
 	}
 
@@ -172,13 +175,14 @@ class Material {
 
 	@property void texture(Texture tex) {
 		_texture = tex;
+		//Currently unused (switching is done in shader.)
 		//To do: optimize for case when program doesn't change?
-		if(tex) {
+		/+if(tex) {
 			_fragShader = textureFragmentShader;
 		} else {
 			_fragShader = materialFragmentShader;
 		}
-		setProgram();
+		setProgram();+/
 	}
 
 	//To do: figure out how this will work w/ shaders.
