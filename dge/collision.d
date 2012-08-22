@@ -30,7 +30,20 @@ class CollisionObject: NodeGroup {
 		handleCollisions();
 	}
 
-	void onCollision(CollisionObstacle other) {}
+	Vector3 toESpace(Vector3 vec) {
+		return worldRotation * ((worldRotation.transposed * vec) / ellipsoidRadius);
+	}
+
+	Vector3 fromESpace(Vector3 vec) {
+		return worldRotation * ((worldRotation.transposed * vec) * ellipsoidRadius);
+	}
+
+	void onCollision(CollisionObstacle other, Vector3 normal, Vector3 defaultNewVelocity) {
+		velocity = defaultNewVelocity;
+	}
+
+	Vector3 ellipsoidRadius;
+	Vector3 velocity = Vector3(0f, 0f, 0f);
 
 	protected:
 	void handleCollisions() {
@@ -41,31 +54,31 @@ class CollisionObject: NodeGroup {
 
 		//Will be set by newPosition()
 		Vector3 newVelocity;
-		bool hasNewVelocity;
+		bool hasNewVelocity = false;
 
-		Vector3 newPosition(Vector3 position, Vector3 velocity) {
+		Vector3 newPosition() {
 			enum float veryCloseDistance = 0.005;
 			if(recursionDepth > 5)
 				return input.position;
 
-			input.velocity = velocity;
-			input.normalizedVelocity = velocity.normalized();
-			input.position = position;
 			result.foundCollision = false;
 
 			checkCollisions(input, result);
 
-			if(!result.foundCollision)
-				return position + velocity;
+			if(!result.foundCollision) {
+				return input.position + input.velocity;
+			}
 
 			//Otherwise, there's a collision.
-			Vector3 dest = position + velocity;
-			Vector3 newBasePoint = position;
+			Vector3 dest = input.position + input.velocity;
+			Vector3 newBasePoint = input.position;
+
+			hasNewVelocity = true;
 
 			//If we're far enough away, move toward the collision point.
 			if(result.nearestDistance >= veryCloseDistance) {
-				Vector3 v = velocity.normalized();
-				newBasePoint = position + (v * (result.nearestDistance - veryCloseDistance));
+				Vector3 v = input.velocity.normalized();
+				newBasePoint = newBasePoint + (v * (result.nearestDistance - veryCloseDistance));
 				result.collisionPoint = result.collisionPoint - veryCloseDistance*v;
 			}
 
@@ -77,21 +90,29 @@ class CollisionObject: NodeGroup {
 			Vector3 newDest = dest - slidingPlane.signedDistanceTo(dest) * slidePlaneNormal;
 			//Declared in containing function
 			newVelocity = newDest - result.collisionPoint;
-			hasNewVelocity = true;
+
+			//onCollision();
 
 			if(newVelocity.magnitude < veryCloseDistance) {
 				return newBasePoint;
 			}
 
 			++recursionDepth;
-			return newPosition(newBasePoint, newVelocity);
+
+			input.position = position;
+			input.velocity = velocity;
+
+			return newPosition();
 		}
 
-		Vector3 eSpacePos = worldPosition / ellipsoidRadius;
-		Vector3 eSpaceV = worldRotation * this.velocity / ellipsoidRadius;
+		Vector3 eSpacePos = toESpace(worldPosition);
+		Vector3 eSpaceV = toESpace(this.velocity);
 
-		this.position = newPosition(eSpacePos, eSpaceV) * ellipsoidRadius;
-		if(hasNewVelocity) this.velocity = newVelocity * ellipsoidRadius;
+		input.position = eSpacePos;
+		input.velocity = eSpaceV;
+
+		this.position = fromESpace(newPosition());
+		if(hasNewVelocity) this.velocity = fromESpace(newVelocity);
 	}
 
 	void checkCollisions(const ref CollisionInput input, ref CollisionResult result) {
@@ -114,9 +135,9 @@ class CollisionObject: NodeGroup {
 
 	void checkAgainstTriangle(Vector3[3] p, const ref CollisionInput input, ref CollisionResult lastCollision) {
 		//Convert to ellipsoid space.
-		p[0] = p[0] / ellipsoidRadius;
-		p[1] = p[1] / ellipsoidRadius;
-		p[2] = p[2] / ellipsoidRadius;
+		p[0] = toESpace(p[0]);
+		p[1] = toESpace(p[1]);
+		p[2] = toESpace(p[2]);
 
 		Vector3 position = input.position;
 		Vector3 velocity = input.velocity;
@@ -236,9 +257,6 @@ class CollisionObject: NodeGroup {
 			}
 		}
 	}
-
-	Vector3 ellipsoidRadius;
-	Vector3 velocity = Vector3(0f, 0f, 0f);
 }
 
 struct CollisionResult {
@@ -248,7 +266,23 @@ struct CollisionResult {
 }
 
 struct CollisionInput {
-	Vector3 position, velocity, normalizedVelocity;
+	Vector3 position;
+
+	@property Vector3 velocity() {
+		return _velocity;
+	}
+
+	@property void velocity(Vector3 value) {
+		_velocity = value;
+		_normalizedVelocity = value.normalized();
+	}
+
+	/+@property Vector3 normalizedVelocity() {
+		return _normalizedVelocity;
+	}+/
+
+	private:
+	Vector3 _velocity, _normalizedVelocity;
 }
 
 class CollisionObstacle: NodeGroup {

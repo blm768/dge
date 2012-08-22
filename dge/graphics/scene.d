@@ -201,13 +201,35 @@ abstract class Node {
 		return _worldRotation;
 	}
 
-	Vector3 position = Vector3(0.0, 0.0, 0.0);
-	TransformMatrix rotation = identityTransform;
+	@property Vector3 position() {
+		return _position;
+	}
+
+	@property void position(Vector3 value) {
+		_position = value;
+		if(scene) {
+			_lastPositionUpdate = _lastTransformUpdate = _lastInverseTransformUpdate = scene.currentFrame - 1;
+		}
+	}
+
+	@property TransformMatrix rotation() {
+		return _rotation;
+	}
+
+	@property void rotation(TransformMatrix value) {
+		_rotation = value;
+		if(scene) {
+			_lastRotationUpdate = _lastTransformUpdate = _lastInverseTransformUpdate = scene.currentFrame - 1;
+		}
+	}
 
 	Node parent;
 	Scene scene;
 
 	private:
+	Vector3 _position = Vector3(0.0, 0.0, 0.0);
+	TransformMatrix _rotation = identityTransform;
+
 	Vector3 _worldPosition;
 	uint _lastPositionUpdate;
 	TransformMatrix _worldRotation;
