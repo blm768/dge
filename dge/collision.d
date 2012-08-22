@@ -113,6 +113,11 @@ class CollisionObject: NodeGroup {
 		input.velocity = eSpaceV;
 
 		this.position = fromESpace(newPosition());
+		//If there's a parent, factor its transformation into the position.
+		if(parent !is scene) {
+			this.position = parent.inverseWorldTransform * this.position;
+		}
+		//For now, velocity is in world space.
 		if(hasNewVelocity) this.velocity = fromESpace(newVelocity);
 	}
 
@@ -147,8 +152,13 @@ class CollisionObject: NodeGroup {
 		Vector3 velocity = input.velocity;
 
 		auto plane = Plane(cross(p[1] - p[0], p[2] - p[0]).normalized(), p[0]);
-		//To do: check for back-facing planes.
+
 		float nDotVelocity = dot(plane.normal, velocity);
+
+		//Cull tests where object is moving away from the plane.
+		if(nDotVelocity > 0) {
+			return;
+		}
 		float planeDist = plane.signedDistanceTo(position);
 
 		float t0, t1;
