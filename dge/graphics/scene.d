@@ -201,7 +201,7 @@ abstract class Node {
 		return _worldRotation;
 	}
 
-	@property Vector3 position() {
+	@property Vector3 position() const {
 		return _position;
 	}
 
@@ -212,7 +212,7 @@ abstract class Node {
 		}
 	}
 
-	@property TransformMatrix rotation() {
+	@property TransformMatrix rotation() const {
 		return _rotation;
 	}
 

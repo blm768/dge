@@ -38,8 +38,8 @@ class CollisionObject: NodeGroup {
 		return worldRotation * ((worldRotation.transposed * vec) * ellipsoidRadius);
 	}
 
-	void onCollision(CollisionObstacle other, Vector3 normal, Vector3 defaultNewVelocity) {
-		velocity = defaultNewVelocity;
+	void onCollision(CollisionObstacle obstacle, Vector3 normal, ref CollisionInput input) {
+		//velocity = defaultNewVelocity;
 	}
 
 	Vector3 ellipsoidRadius;
@@ -91,16 +91,17 @@ class CollisionObject: NodeGroup {
 			//Declared in containing function
 			newVelocity = newDest - result.collisionPoint;
 
-			//onCollision();
+			input.position = newBasePoint;
+			input.velocity = newVelocity;
 
-			if(newVelocity.magnitude < veryCloseDistance) {
-				return newBasePoint;
+			onCollision(result.obstacle, slidePlaneNormal, input);
+
+			//Has the object slowed almost to a stop?
+			if(input.velocity.magnitude < veryCloseDistance) {
+				return input.position;
 			}
 
 			++recursionDepth;
-
-			input.position = position;
-			input.velocity = velocity;
 
 			return newPosition();
 		}
@@ -121,15 +122,18 @@ class CollisionObject: NodeGroup {
 		}
 	}
 
-	void checkAgainstObject(CollisionObstacle obstacle, const ref CollisionInput input, ref CollisionResult lastCollision) {
+	void checkAgainstObject(CollisionObstacle obstacle, const ref CollisionInput input, ref CollisionResult result) {
 		foreach(const Mesh.FaceGroup fg; obstacle.collisionMesh.faceGroups) {
 			foreach(const Face f; fg.faces) {
 				Vector3[3] vertices;
 				foreach(i, vIndex; f.vertices) {
 					vertices[i] = obstacle.worldTransform * obstacle.collisionMesh.vertices[vIndex];
 				}
-				checkAgainstTriangle(vertices, input, lastCollision);
+				checkAgainstTriangle(vertices, input, result);
 			}
+		}
+		if(result.foundCollision) {
+			result.obstacle = obstacle;
 		}
 	}
 
@@ -263,12 +267,15 @@ struct CollisionResult {
 	bool foundCollision;
 	float nearestDistance;
 	Vector3 collisionPoint;
+	CollisionObstacle obstacle;
 }
 
 struct CollisionInput {
 	Vector3 position;
 
-	@property Vector3 velocity() {
+	//To do: file enhancement request? (Code using const reference to
+	//this object w/o const on the method gives an unhelpful error message.)
+	@property Vector3 velocity() const {
 		return _velocity;
 	}
 
@@ -277,9 +284,9 @@ struct CollisionInput {
 		_normalizedVelocity = value.normalized();
 	}
 
-	/+@property Vector3 normalizedVelocity() {
+	@property Vector3 normalizedVelocity() const {
 		return _normalizedVelocity;
-	}+/
+	}
 
 	private:
 	Vector3 _velocity, _normalizedVelocity;
