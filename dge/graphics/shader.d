@@ -311,7 +311,7 @@ in vec2 fragTexCoord;
 vec3 lighting(const Light light, vec3 color) {
 	//Is this a directional (sun) light?
 	if(light.spotCutoff <= 0.0) {
-		return (light.diffuse * max(0.0, dot(fragViewNormal, view * -vec4(light.direction, 0.0)))).rgb;
+		return light.diffuse.rgb * max(0.0, dot(fragViewNormal, (view * -vec4(light.direction, 0.0)).rgb ));
 	} //else
 
 	vec3 fragmentToLight = (view * vec4(light.position, 1.0) - fragViewPosition).xyz;
@@ -350,13 +350,17 @@ vec3 lighting(const Light light, vec3 color) {
 out vec4 fragColor;
 
 void main() {
-	fragColor = diffuse;
+	vec4 color = diffuse;
 	if(useTexture) {
-		fragColor *= texture(surface, fragTexCoord);
+		color *= texture(surface, fragTexCoord);
 	}
 	//To do: optimize conversions.
-	fragColor = vec4(lighting(lights[0], fragColor.rgb), diffuse.a);
+	fragColor = vec4(0, 0, 0, 1);
+	for(uint i = 0; i < numLights; ++i) {
+		fragColor.rgb += lighting(lights[i], color.rgb), diffuse.a;
+	}
 	fragColor.rgb += emission.rgb;
+	fragColor.a = color.a;
 }
 `;
 

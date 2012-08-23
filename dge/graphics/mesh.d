@@ -83,7 +83,7 @@ class Mesh {
 			auto program = material.program;
 			program.use();
 			program.setUniform(program.vUniforms.model, model);
-			program.setUniform(program.vUniforms.view, scene.activeCamera.inverseWorldTransform);
+			program.setUniform(program.vUniforms.view, scene.activeCamera.view);
 			program.setUniform(program.vUniforms.projection, scene.activeCamera.projection);
 
 			material.use(program);

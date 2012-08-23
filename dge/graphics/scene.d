@@ -294,7 +294,20 @@ class CameraNode: Node {
 		}
 	}
 
+	@property TransformMatrix view() {
+		if(useViewPostTransform) {
+			return viewPostTransform * inverseWorldTransform;
+		} else {
+			return inverseWorldTransform;
+		}
+	}
+
 	TransformMatrix projection;
+
+	///Applied to objects after the viewing transform if useViewPostTransform is set
+	TransformMatrix viewPostTransform;
+	///
+	bool useViewPostTransform;
 
 	private:
 	RenderPass[] passes;
@@ -385,11 +398,14 @@ class LightNode: Node {
 	float spotExponent = 0.0;
 
 	static void setProgramLights(DGEShaderProgram program, Scene scene) {
-		//Only actually runs once.
+		size_t i = 0;
 		foreach(LightNode light; scene.lights) {
-			setProgramLight(program, light, 0);
-			break;
+			setProgramLight(program, light, i);
+			++i;
+			if(i >= maxLightsPerObject)
+				break;
 		}
+		program.setUniform(program.matUniforms.numLights, cast(int)i);
 	}
 
 	//To do: make a normal method?

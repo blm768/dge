@@ -25,13 +25,11 @@ class MirrorNode: Node {
 		auto projection = camera.projection;
 
 		//Put the scene at the mirror's world-space origin and undo its rotation.
-		auto mirrorProjection =  worldRotation.transposed * translationMatrix(-worldPosition) * camera.worldTransform;
+		auto mirrorTransform =  worldRotation.transposed * translationMatrix(-worldPosition) * camera.worldTransform;
 		//Scale the scene.
-		mirrorProjection = scaleMatrix(Vector3(1.0, 1.0, -1.0)) * mirrorProjection;
+		mirrorTransform = scaleMatrix(Vector3(1.0, 1.0, -1.0)) * mirrorTransform;
 		//Return the scene to its position.
-		mirrorProjection = camera.inverseWorldTransform * translationMatrix(worldPosition) * worldRotation * mirrorProjection;
-		//Apply the normal projection.
-		mirrorProjection = projection * mirrorProjection;
+		mirrorTransform = camera.inverseWorldTransform * translationMatrix(worldPosition) * worldRotation * mirrorTransform;
 
 		auto maskProjection = zTransform * projection;
 
@@ -63,10 +61,13 @@ class MirrorNode: Node {
 		glColorMask(1, 1, 1, 1);
 
 		//Render the reflected objects:
-		camera.projection = mirrorProjection;
+		camera.projection = projection;
+		camera.viewPostTransform = mirrorTransform;
+		camera.useViewPostTransform = true;
 		glFrontFace(GL_CW);
 		scene.activeCamera.renderExtended(mirrorPass);
 		glFrontFace(GL_CCW);
+		camera.useViewPostTransform = false;
 
 		//To do: reset the clipping plane.
 
