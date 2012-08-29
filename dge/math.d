@@ -129,6 +129,15 @@ struct Vector3 {
 		return result;
 	}
 
+	Vector3 opBinaryRight(string op: "*")(const Matrix!(3, 3) m) const {
+		Vector3 result;
+
+		Matrix!(3, 1) vec3;
+		vec3.values[0][] = values[];
+		result.values = (m * vec3).values[0][0 .. 3];
+		return result;
+	}
+
 	string toString() const {
 		return "(" ~ to!string(x) ~ ", " ~ to!string(y) ~ ", " ~ to!string(z) ~ ")";
 	}
@@ -194,7 +203,8 @@ struct Matrix(size_t numRows, size_t numCols) {
 	}
 
 	///Performs a standard matrix multiplication
-	Matrix!(rows, OtherMatrix.cols) opBinary(string op: "*", OtherMatrix)(OtherMatrix other) const if(__traits(compiles, OtherMatrix.rows) && cols == OtherMatrix.rows) {
+	Matrix!(rows, OtherMatrix.cols) opBinary(string op: "*", OtherMatrix)(OtherMatrix other) const
+			if(__traits(compiles, OtherMatrix.rows) && cols == OtherMatrix.rows) {
 		Matrix!(rows, OtherMatrix.cols) result;
 		for(uint i = 0; i < rows; ++i) {
 			for(uint j = 0; j < OtherMatrix.cols; ++j) {
@@ -214,6 +224,21 @@ struct Matrix(size_t numRows, size_t numCols) {
 		foreach(size_t colNum, const float[numRows] col; values) {
 			foreach(size_t rowNum, float f; col) {
 				result.values[rowNum][colNum] = f;
+			}
+		}
+		return result;
+	}
+
+	Matrix!(Other.rows, Other.cols) opCast(Other)() if(__traits(compiles, Other.rows)) {
+		Other result;
+		foreach(size_t i, float[numRows] col; values) {
+			if(i >= Other.cols)
+				break;
+			static if(Other.rows < numRows) {
+				//To do: ask if D can be changed to allow this code when the second slice is const?
+				result.values[i][0 .. Other.rows] = col[0 .. Other.rows];
+			} else {
+				result.values[i][0 .. numRows] = col[0 .. numRows][];
 			}
 		}
 		return result;
