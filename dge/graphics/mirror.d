@@ -91,7 +91,7 @@ class MirrorNode: Node {
 
 	Mesh mesh;
 
-	enum TransformMatrix zTransform = TransformMatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 1, 1]]);
+	enum TransformMatrix zTransform = TransformMatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 0, 1]]);
 }
 
 private immutable mirror = PassData("Mirror");

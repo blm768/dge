@@ -172,13 +172,20 @@ alias Vector3 Normal;
 /++
 A matrix
 
-Elements are stored internally in column-major order to allow interopability with OpenGL; therefore, the
-array passed to the constructor will be the transposed version of the desired matrix.
+Elements are stored internally in column-major order to allow interopability with OpenGL.
 +/
 
 struct Matrix(size_t numRows, size_t numCols) {
 	static enum size_t rows = numRows;
 	static enum size_t cols = numCols;
+
+	this(float[numCols][numRows] data) {
+		foreach(size_t rowNum, float[numCols] row; data) {
+			foreach(size_t colNum, item; row) {
+				values[colNum][rowNum] = item;
+			}
+		}
+	}
 
 	float[numRows][numCols] values;
 
@@ -213,15 +220,29 @@ struct Matrix(size_t numRows, size_t numCols) {
 	}
 
 	string toString() {
-		string text;
+		string[numRows][numCols] text;
+		size_t maxWidth;
 		for(size_t row = 0; row < numRows; ++row) {
-			for(size_t col = 0; col < numCols - 1; ++col) {
-				text ~= to!string(values[col][row]) ~ ", ";
+			for(size_t col = 0; col < numCols; ++col) {
+				string s = to!string(values[col][row]);
+				if(s.length > maxWidth) {
+					maxWidth = s.length;
+				}
+				text[col][row] = s;
 			}
-			text ~= to!string(values[numCols - 1][row]);
-			text ~= "\n";
 		}
-		return text;
+
+		//To do: actually pad string.
+		string result;
+		foreach(string[numRows] col; text) {
+			foreach(string item; col[0 .. $ - 1]) {
+				result ~= item;
+				result ~= ", ";
+			}
+			result ~= col[$ - 1];
+			result ~= '\n';
+		}
+		return result;
 	}
 }
 
@@ -230,7 +251,7 @@ alias Matrix!(4, 4) TransformMatrix;
 immutable identityTransform = TransformMatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);
 
 TransformMatrix translationMatrix(Vector3 v) {
-	return TransformMatrix([[1f, 0f, 0f, 0f], [0f, 1f, 0f, 0f], [0f, 0f, 1f, 0f], [v.x, v.y, v.z, 1f]]);
+	return TransformMatrix([[1f, 0f, 0f, v.x], [0f, 1f, 0f, v.y], [0f, 0f, 1f, v.z], [0f, 0f, 0f, 1f]]);
 }
 
 TransformMatrix rotationMatrix(float x, float y, float z) {
@@ -241,10 +262,10 @@ TransformMatrix rotationMatrix(float x, float y, float z) {
 	cy = cos(y);
 	sz = sin(z);
 	cz = cos(z);
-	return TransformMatrix([[cy * cz,					cy * sz,					-sy,		0f],
-							[-cx * sz + sx * sy * cz,	cx * cz + sx * sy * sz,		sx * cy,	0f],
-							[sx * sz + cx * sy * cz,	-sx * cz + cx * sy * sz,	cx * cy,	0f],
-							[0f,						0f,							0f,			1f]]);
+	return TransformMatrix([[cy * cz,	-cx * sz + sx * sy * cz,	sx * sz + cx * sy * cz,		0f],
+							[cy * sz,	cx * cz + sx * sy * sz,		-sx * cz + cx * sy * sz,	0f],
+							[-sy,		sx * cy,					cx * cy,					0f],
+							[0f,		0f,							0f,							1f]]);
 }
 
 TransformMatrix scaleMatrix(Vector3 s) {
@@ -260,9 +281,8 @@ TransformMatrix perspectiveMatrix(float aspectRatio, float angle, float near, fl
 	float q = -(far + near) / depth;
 	float qn = -2 * (far * near) / depth;
 
-	//For debugging, just return an orthographic projection.
 	return TransformMatrix([[near/right,	0.0,			0.0,	0.0 ],
 							[0.0,			near/top,		0.0,	0.0 ],
-							[0.0, 			0.0,			q,		-1.0],
-							[0.0,			0.0,			qn,		0.0 ]]);
+							[0.0, 			0.0,			q,		qn	],
+							[0.0,			0.0,			-1.0,	0.0 ]]);
 }

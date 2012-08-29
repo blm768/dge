@@ -123,11 +123,20 @@ class CollisionObject: NodeGroup {
 
 	void checkCollisions(const ref CollisionInput input, ref CollisionResult result) {
 		foreach(CollisionObstacle ob; scene.collisionObstacles) {
+			checkAgainstObstacle(ob, input, result);
+			if(result.foundCollision) {
+				return;
+			}
+		}
+		foreach(CollisionObject ob; scene.collisionObjects) {
 			checkAgainstObject(ob, input, result);
+			if(result.foundCollision) {
+				return;
+			}
 		}
 	}
 
-	void checkAgainstObject(CollisionObstacle obstacle, const ref CollisionInput input, ref CollisionResult result) {
+	void checkAgainstObstacle(CollisionObstacle obstacle, const ref CollisionInput input, ref CollisionResult result) {
 		foreach(const Mesh.FaceGroup fg; obstacle.collisionMesh.faceGroups) {
 			foreach(const Face f; fg.faces) {
 				Vector3[3] vertices;
@@ -270,6 +279,10 @@ class CollisionObject: NodeGroup {
 				lastCollision.collisionPoint = collisionPoint;
 			}
 		}
+	}
+
+	void checkAgainstObject(CollisionObject obj, const ref CollisionInput input, ref CollisionResult result) {
+
 	}
 }
 

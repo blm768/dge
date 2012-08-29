@@ -16,8 +16,9 @@ Represents a shader program
 To do: error checking?
 +/
 class ShaderProgram {
-	this(VertexShader vs, FragmentShader fs) {
+	this(VertexShader vs, FragmentShader fs, GeometryShader gs = null) {
 		shaders.vs = vs;
+		shaders.gs = gs;
 		shaders.fs = fs;
 		prepareProgram();
 	}
@@ -137,6 +138,9 @@ class ShaderProgram {
 		programId = glCreateProgram();
 		glAttachShader(programId, shaders.vs.shaderId);
 		glAttachShader(programId, shaders.fs.shaderId);
+		if(shaders.gs) {
+			glAttachShader(programId, shaders.gs.shaderId);
+		}
 
 		glLinkProgram(programId);
 		int linked;
@@ -165,8 +169,8 @@ class ShaderProgram {
 A shader program that includes DGE information
 +/
 class DGEShaderProgram: ShaderProgram {
-	this(VertexShader vs, FragmentShader fs) {
-		super(vs, fs);
+	this(VertexShader vs, FragmentShader fs, GeometryShader gs = null) {
+		super(vs, fs, gs);
 		calculateData();
 	}
 
@@ -202,6 +206,7 @@ class DGEShaderProgram: ShaderProgram {
 struct ShaderGroup {
 	VertexShader vs;
 	FragmentShader fs;
+	GeometryShader gs;
 }
 
 class Shader {
@@ -241,6 +246,12 @@ class VertexShader: Shader {
 	}
 }
 
+class GeometryShader: Shader {
+	this(const(char)[] shader) {
+		super(shader, GL_GEOMETRY_SHADER);
+	}
+}
+
 class FragmentShader: Shader {
 	this(const(char)[] shader) {
 		super(shader, GL_FRAGMENT_SHADER);
@@ -272,6 +283,28 @@ void main() {
 	static VertexShader shader;
 	if(!shader) {
 		shader = new VertexShader(defaultVertexShaderText);
+	}
+	return shader;
+}
+
+private string defaultGeometryShaderText = `
+#version 330
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 6) out;
+
+void main() {
+	for(int i = 0; i < 3; ++i) {
+		gl_Position = gl_in[i].gl_Position;
+		EmitVertex();
+	}
+	EndPrimitive();
+}
+`;
+
+@property GeometryShader defaultGeometryShader() {
+	static GeometryShader shader;
+	if(!shader) {
+		shader = new GeometryShader(defaultGeometryShaderText);
 	}
 	return shader;
 }

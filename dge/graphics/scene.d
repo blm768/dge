@@ -152,7 +152,10 @@ abstract class Node {
 		return rotation.transposed * translationMatrix(-position);
 	}
 
-	///Returns a matrix representing the node's world transformation
+	/++
+	Returns a matrix representing the node's world transformation
+	Warning: world transform properties may not respond to changes in the parents' transforms until the next frame.
+	+/
 	@property TransformMatrix worldTransform() {
 		if(_lastTransformUpdate != scene.currentFrame) {
 			if(parent !is scene) {

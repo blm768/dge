@@ -72,8 +72,9 @@ Standard, color-based material
 class Material {
 	public:
 	this() {
-		_vertShader = defaultVertexShader;
-		_fragShader = materialFragmentShader;
+		_shaders.vs = defaultVertexShader;
+		_shaders.fs = materialFragmentShader;
+		//_shaders.gs = defaultGeometryShader;
 		setProgram();
 	}
 
@@ -125,11 +126,15 @@ class Material {
 	}
 
 	@property FragmentShader fragShader() {
-		return _fragShader;
+		return _shaders.fs;
 	}
 
 	@property VertexShader vertShader() {
-		return _vertShader;
+		return _shaders.vs;
+	}
+
+	@property GeometryShader geometryShader() {
+		return _shaders.gs;
 	}
 
 	@property DGEShaderProgram program() {
@@ -157,13 +162,12 @@ class Material {
 
 	private:
 	void setProgram() {
-		_program = ShaderProgram.getProgram!DGEShaderProgram(ShaderGroup(vertShader, fragShader));
+		_program = ShaderProgram.getProgram!DGEShaderProgram(_shaders);
 	}
 
 	Texture _texture;
 
-	VertexShader _vertShader;
-	FragmentShader _fragShader;
+	ShaderGroup _shaders;
 	DGEShaderProgram _program;
 }
 
