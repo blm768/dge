@@ -34,7 +34,7 @@ class Scene: NodeGroup {
 		++_currentFrame;
 	}
 
-	void addNodeToPass(RenderPass pass, Node n) {
+	void addNodeToPass(PassId pass, Node n) {
 		Set!Node* layer = pass in renderLayers;
 		if(!layer) {
 			scene.renderLayers[pass] = Set!Node();
@@ -43,7 +43,7 @@ class Scene: NodeGroup {
 		layer.add(n);
 	}
 
-	void removeNodeFromPass(RenderPass pass, Node n) {
+	void removeNodeFromPass(PassId pass, Node n) {
 		try {
 			renderLayers[pass].remove(n);
 		} catch (Error e) {
@@ -51,7 +51,7 @@ class Scene: NodeGroup {
 		}
 	}
 
-	Set!Node[RenderPass] renderLayers;
+	Set!Node[PassId] renderLayers;
 
 	Color diffuseLight;
 
@@ -250,7 +250,7 @@ class CameraNode: Node {
 	///
 	this(TransformMatrix projection) {
 		this.projection = projection;
-		passes = [mirrorPass, opaquePass];
+		passes = [RenderPass(mirrorPass, new MirrorPassData), RenderPass(opaquePass)];
 	}
 
 	override void onAddToScene() {
@@ -269,12 +269,19 @@ class CameraNode: Node {
 		super.onRemoveFromScene();
 	}
 
+	///Renders the scene
 	void render() {
+		setUpPasses();
+		renderSubPass();
+	}
+
+	///Renders the scene without re-initializing pass data; used for recursive rendering methods
+	void renderSubPass()() {
 		//Run each rendering pass.
 		foreach(RenderPass pass; passes) {
-			Set!Node* layer = pass in scene.renderLayers;
+			Set!Node* layer = pass.id in scene.renderLayers;
 			if(layer) {
-				activePass = pass;
+				_activePass = pass;
 				foreach(Node n; *layer) {
 					n.draw();
 				}
@@ -282,19 +289,8 @@ class CameraNode: Node {
 		}
 	}
 
-	void renderExtended()(RenderPass exception) {
-		//Run each rendering pass.
-		foreach(RenderPass pass; passes) {
-			if(pass == exception)
-				continue;
-			Set!Node* layer = pass in scene.renderLayers;
-			if(layer) {
-				activePass = pass;
-				foreach(Node n; *layer) {
-					n.draw();
-				}
-			}
-		}
+	@property RenderPass activePass() {
+		return _activePass;
 	}
 
 	@property TransformMatrix view() {
@@ -313,8 +309,15 @@ class CameraNode: Node {
 	bool useViewPostTransform;
 
 	private:
+	void setUpPasses() {
+		foreach(RenderPass pass; passes) {
+			if(pass.data) {
+				pass.data.onStartPass();
+			}
+		}
+	}
 	RenderPass[] passes;
-	RenderPass activePass;
+	RenderPass _activePass;
 }
 
 class MeshNode: Node {
@@ -326,7 +329,7 @@ class MeshNode: Node {
 	}
 
 	override void draw() {
-		mesh.draw(scene, worldTransform, scene.activeCamera.activePass == transparentPass);
+		mesh.draw(scene, worldTransform, scene.activeCamera.activePass.id == transparentPass);
 	}
 
 	override void onAddToScene() {

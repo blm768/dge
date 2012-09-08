@@ -21,6 +21,14 @@ class MirrorNode: Node {
 	To do: optimize repeated worldTransform() accesses?
 	+/
 	override void draw() {
+		//To do: eliminate dynamic cast?
+		auto passData = cast(MirrorPassData)(scene.activeCamera.activePass.data);
+		assert(passData);
+
+		if(passData.currentMirror is this) {
+			return;
+		}
+
 		auto camera = scene.activeCamera;
 		auto projection = camera.projection;
 
@@ -65,7 +73,12 @@ class MirrorNode: Node {
 		camera.viewPostTransform = mirrorTransform;
 		camera.useViewPostTransform = true;
 		glFrontFace(GL_CW);
-		scene.activeCamera.renderExtended(mirrorPass);
+
+		auto lastMirror = passData.currentMirror;
+		passData.currentMirror = this;
+		scene.activeCamera.renderSubPass();
+		passData.currentMirror = lastMirror;
+
 		glFrontFace(GL_CCW);
 		camera.useViewPostTransform = false;
 
@@ -94,5 +107,17 @@ class MirrorNode: Node {
 	enum TransformMatrix zTransform = TransformMatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 0, 1]]);
 }
 
-private immutable mirror = PassData("Mirror");
-RenderPass mirrorPass = &mirror;
+private immutable mirror = PassInfo("Mirror");
+PassId mirrorPass = &mirror;
+
+class MirrorPassData: PassData {
+	override void onStartPass() {
+		iterations = maxMirrorReflections;
+		currentMirror = null;
+	}
+
+	///The number of remaining iterations
+	size_t iterations;
+	///The mirror from which the scene is currently being rendered
+	MirrorNode currentMirror;
+}

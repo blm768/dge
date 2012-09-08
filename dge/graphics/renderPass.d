@@ -6,16 +6,24 @@ public import dge.graphics.scene;
 public import dge.util.array;
 
 
-struct PassData {
-	alias void function(Scene s, Set!Node layer) DrawFunction;
+struct PassInfo {
 	string name;
 }
 
-alias const(PassData)* RenderPass;
+alias immutable(PassInfo)* PassId;
+
+abstract class PassData {
+	void onStartPass();
+}
+
+struct RenderPass {
+	PassId id;
+	PassData data;
+}
 
 /++ A rendering pass that renders standard opaque objects. +/
-private immutable opaque = PassData("Opaque");
-RenderPass opaquePass = &opaque;
+private immutable opaque = PassInfo("Opaque");
+PassId opaquePass = &opaque;
 
-private immutable transparent = PassData("Transparent");
-RenderPass transparentPass = &transparent;
+private immutable transparent = PassInfo("Transparent");
+PassId transparentPass = &transparent;

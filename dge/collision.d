@@ -1,10 +1,5 @@
-/++Ellipsoid/mesh collision
-Based on "Improved Collision Detection and Response," <www.peroxide.dk/papers/collision/collision.pdf>
-and "Intersection of Swept Ellipses and Swept Ellipsoids" <http://www.geometrictools.com/Documentation/IntersectionSweptEllipsesEllipsoids.pdf>
-
-The code from the latter is provided under the Boost License, which is provided at the end of this source file.
-Based on the Wild Magic source code:
-Copyright David Eberly
+/++Hybrid ellipsoid- and capsule-based collision detection
+Partially based on "Improved Collision Detection and Response," <www.peroxide.dk/papers/collision/collision.pdf>
 +/
 module dge.collision;
 
@@ -15,8 +10,11 @@ import dge.math;
 import std.stdio;
 
 class CollisionObject: NodeGroup {
-	this(Vector3 ellipsoidRadius) {
-		this.ellipsoidRadius = ellipsoidRadius;
+	this() {}
+
+	this(float heightRadius, float widthRadius) {
+		this.heightRadius = heightRadius;
+		this.widthRadius = widthRadius;
 	}
 
 	override void onAddToScene() {
@@ -36,53 +34,48 @@ class CollisionObject: NodeGroup {
 	}
 
 	Vector3 toESpace(Vector3 vec) {
-		return worldRotation * ((worldRotation.transposed * vec) / ellipsoidRadius);
+		return worldRotation * ((worldRotation.transposed * vec) / Vector3(widthRadius, heightRadius, widthRadius));
 	}
 
 	Vector3 fromESpace(Vector3 vec) {
-		return worldRotation * ((worldRotation.transposed * vec) * ellipsoidRadius);
+		return worldRotation * ((worldRotation.transposed * vec) * Vector3(widthRadius, heightRadius, widthRadius));
 	}
 
-	void onCollision(CollisionObstacle obstacle, Vector3 normal, ref CollisionInput input) {
+	void onCollision(CollisionObstacle obstacle, Vector3 normal) {
 		//velocity = defaultNewVelocity;
 	}
 
-	Vector3 ellipsoidRadius;
+	float widthRadius, heightRadius;
 	Vector3 velocity = Vector3(0f, 0f, 0f);
 
 	protected:
 	void handleCollisions() {
-		CollisionInput input;
 		CollisionResult result;
 
 		size_t recursionDepth = 0;
 
-		//Will be set by newPosition()
-		Vector3 newVelocity;
-		bool hasNewVelocity = false;
-
-		Vector3 newPosition() {
+		void getNewPosition() {
 			enum float veryCloseDistance = 0.005;
 			if(recursionDepth > 5)
-				return input.position;
+				return;
 
 			result.foundCollision = false;
 
-			checkCollisions(input, result);
+			checkCollisions(result);
 
 			if(!result.foundCollision) {
-				return input.position + input.velocity;
+				//To do: file a bug; += should either work or not compile.
+				position = position + velocity;
+				return;
 			}
 
 			//Otherwise, there's a collision.
-			Vector3 dest = input.position + input.velocity;
-			Vector3 newBasePoint = input.position;
-
-			hasNewVelocity = true;
+			Vector3 dest = position + velocity;
+			Vector3 newBasePoint = position;
 
 			//If we're far enough away, move toward the collision point.
 			if(result.nearestDistance >= veryCloseDistance) {
-				Vector3 v = input.velocity.normalized();
+				Vector3 v = velocity.normalized();
 				newBasePoint = newBasePoint + (v * (result.nearestDistance - veryCloseDistance));
 				result.collisionPoint = result.collisionPoint - veryCloseDistance*v;
 			}
@@ -93,48 +86,45 @@ class CollisionObject: NodeGroup {
 			Plane slidingPlane = Plane(slidePlaneNormal, slidePlaneOrigin);
 
 			Vector3 newDest = dest - slidingPlane.signedDistanceTo(dest) * slidePlaneNormal;
-			//Declared in containing function
-			newVelocity = newDest - result.collisionPoint;
 
-			input.position = newBasePoint;
-			input.velocity = newVelocity;
+			position = newBasePoint;
+			velocity = newDest - result.collisionPoint;
 
-			onCollision(result.obstacle, slidePlaneNormal, input);
+			onCollision(result.obstacle, slidePlaneNormal);
 
 			//Has the object slowed almost to a stop?
-			if(input.velocity.magnitude < veryCloseDistance) {
-				return input.position;
+			if(velocity.magnitude < veryCloseDistance) {
+				return;
 			}
 
 			++recursionDepth;
 
-			return newPosition();
+			getNewPosition();
 		}
 
-		Vector3 eSpacePos = toESpace(worldPosition);
-		Vector3 eSpaceV = toESpace(this.velocity);
-
-		input.position = eSpacePos;
-		input.velocity = eSpaceV;
-
-		this.position = fromESpace(newPosition());
+		getNewPosition();
 		//If there's a parent, factor its transformation into the position.
 		if(parent !is scene) {
 			this.position = parent.inverseWorldTransform * this.position;
 		}
-		//For now, velocity is in world space.
-		if(hasNewVelocity) this.velocity = fromESpace(newVelocity);
 	}
 
-	void checkCollisions(const ref CollisionInput input, ref CollisionResult result) {
+	void checkCollisions(ref CollisionResult result) {
+		//Input for ellipsoid tests
+		CollisionInput eInput;
+		eInput.position = toESpace(position);
+		eInput.velocity = toESpace(velocity);
 		foreach(CollisionObstacle ob; scene.collisionObstacles) {
-			checkAgainstObstacle(ob, input, result);
+			checkAgainstObstacle(ob, eInput, result);
 			if(result.foundCollision) {
 				return;
 			}
 		}
 		foreach(CollisionObject ob; scene.collisionObjects) {
-			checkAgainstObject(ob, input, result);
+			//Velocity thing for testing
+			if(ob is this || velocity.magnitude < 0.001)
+				continue;
+			checkAgainstObject(ob, result);
 			if(result.foundCollision) {
 				return;
 			}
@@ -156,6 +146,7 @@ class CollisionObject: NodeGroup {
 		}
 	}
 
+	//To do: convert results from ellipsoid space.
 	void checkAgainstTriangle(Vector3[3] p, const ref CollisionInput input, ref CollisionResult lastCollision) {
 		//Convert to ellipsoid space.
 		p[0] = toESpace(p[0]);
@@ -275,7 +266,7 @@ class CollisionObject: NodeGroup {
 		}
 
 		if(foundCollision) {
-			float distance = t * velocity.magnitude;
+			float distance = t * fromESpace(velocity).magnitude;
 
 			//Is this collision closer than the last one?
 			if(!lastCollision.foundCollision || distance < lastCollision.nearestDistance) {
@@ -286,63 +277,66 @@ class CollisionObject: NodeGroup {
 		}
 	}
 
-	void checkAgainstObject(CollisionObject obj, const ref CollisionInput input, ref CollisionResult result) {
-		Vector3 velocity0, velocity1;
-		float contactTime;
-		// Get the parameters of ellipsoid0.
-		Vector3 K0 = worldPosition;
-		auto R0 = cast(Matrix!(3, 3))worldRotation;
-		/+auto D0 = Matrix!(3, 3)(
-			1.0/(ellipsoid0.Extent[0]*ellipsoid0.Extent[0]),
-			1.0/(ellipsoid0.Extent[1]*ellipsoid0.Extent[1]),
-			1.0/(ellipsoid0.Extent[2]*ellipsoid0.Extent[2]));
-		// Get the parameters of ellipsoid1.
-		Vector3d K1 = ellipsoid1.Center;
-		Matrix3d R1(ellipsoid1.Axis, true);
-		Matrix3d D1(
-		1.0/(ellipsoid1.Extent[0]*ellipsoid1.Extent[0]),
-		1.0/(ellipsoid1.Extent[1]*ellipsoid1.Extent[1]),
-		1.0/(ellipsoid1.Extent[2]*ellipsoid1.Extent[2]));
-		// Compute K2.
-		Matrix3d D0NegHalf(ellipsoid0.Extent[0], ellipsoid0.Extent[1],
-		ellipsoid0.Extent[2]);
-		Matrix3d D0Half(1.0/ellipsoid0.Extent[0], 1.0/ellipsoid0.Extent[1],
-		1.0/ellipsoid0.Extent[2]);
-		Vector3d K2 = D0Half*((K1 - K0)*R0);
-		// Compute M2.
-		Matrix3d R1TR0D0NegHalf = R1.TransposeTimes(R0*D0NegHalf);
-		Matrix3d M2 = R1TR0D0NegHalf.TransposeTimes(D1)*R1TR0D0NegHalf;
-		// Factor M2 = R*D*R^T.
-		Matrix3d R, D;
-		M2.EigenDecomposition(R, D);
-		// Compute K.
-		Vector3d K = K2*R;
-		// Compute W.
-		Vector3d W = (D0Half*((velocity1 - velocity0)*R0))*R;
-		// Transformed ellipsoid0 is Z^T*Z = 1 and transformed ellipsoid1 is
-		// (Z-K)^T*D*(Z-K) = 0.
-		// Compute the initial closest point.
-		Vector3d P0;
-		if (ComputeClosestPoint(D, K, P0) >= 0.0)
+	void checkAgainstObject(CollisionObject other, ref CollisionResult result) {
+		float halfHeight0 = (heightRadius - widthRadius);
+		float halfHeight1 = (other.heightRadius - other.widthRadius);
+		float radius0 = widthRadius, radius1 = other.widthRadius;
+
+		//Sweep against the cylindrical section of the capsule.
 		{
-		// The ellipsoid contains the origin, so the ellipsoids were not
-		// separated.
-		return false;
+			float paddedRadius = radius0 + radius1;
+
+			//The start and direction of the line segment representing the first capsule
+			Vector3 segStart = worldPosition;
+			Vector3 segDir = worldRotation * Vector3(0, 1, 0);
+
+			//The center and direction of the cylinder
+			Vector3 cylStart = other.worldPosition;
+			Vector3 cylDir = other.worldRotation * Vector3(0, 1, 0);
+
+			//The velocity of the second object relative to the first
+			Vector3 velocity = other.velocity - this.velocity;
+
+			//We pretend to be intersecting a circle and a 2D segment, then generalize it to 3D.
+			Vector3 cylToSeg = segStart - cylStart;
+			float locOnSeg = dot(cylToSeg, segDir);
+			//Is the collision point actually within the segment?
+			if(locOnSeg > -halfHeight0 && locOnSeg < halfHeight0) {
+				//Make cylinderToSeg perpendicular to the segment.
+				cylToSeg -= segDir * locOnSeg;
+				float locOnCyl = dot(cylToSeg, cylDir);
+
+				//Flatten the vector along the cylinder's axis.
+				Vector3 cylToSegFlat = cylToSeg - cylDir * locOnSeg;
+
+				Vector3 dir = cylToSegFlat.normalized;
+				float vDotDir = dot(velocity, dir);
+
+				//Is the relative velocity in the right direction?
+				if(vDotDir < 0) {
+					//No; return.
+					return;
+				}
+
+				//Is the collision point on the cylinder's surface?
+				if(locOnCyl > -halfHeight1 && locOnCyl < halfHeight1) {
+					float distToSeg = cylToSegFlat.magnitude;
+					//The minimum velocity needed for a collision
+					float minCollisionVelocity = distToSeg - radius0 - radius1;
+
+					//Is there a collision in this frame?
+					if(vDotDir >= minCollisionVelocity) {
+						result.foundCollision = true;
+						//result.collisionPoint =
+					}
+
+				}
+
+			}
+
+			//writeln(distToSeg);
+
 		}
-		double dist0 = P0.Dot(P0) - 1.0;
-		if (dist0 < 0.0)
-		{
-		// The ellipsoids are not separated.
-		return false;
-		}
-		Vector3d Zcontact;
-		if (!ComputeContact(D, K, W, contactTime, Zcontact))
-		{
-		return false;
-		}
-		// Transform contactPoint back to original space.
-		contactPoint = K0 + R0*D0NegHalf*R*Zcontact;
-		return true;+/
 	}
 }
 
@@ -409,7 +403,7 @@ bool pointIsInTriangle(Vector3 point, Vector3 pa, Vector3 pb, Vector3 pc) pure {
 	return ((reinterpret!uint(z) & ~(reinterpret!int(x) | reinterpret!int(y))) & 0x80000000) != 0;
 }
 
-To reinterpret(To, From)(From from) if(To.sizeof == From.sizeof){
+To reinterpret(To, From)(From from) if(To.sizeof == From.sizeof) {
 	return *(cast(To*)&from);
 }
 
@@ -437,30 +431,3 @@ float lowestRoot(float a, float b, float c, float maxR) {
 	return float.nan;
 }
 
-//Boost License
-
-/+
-Boost Software License - Version 1.0 - August 17th, 2003
-
-Permission is hereby granted, free of charge, to any person or organization
-obtaining a copy of the software and accompanying documentation covered by
-this license (the "Software") to use, reproduce, display, distribute,
-execute, and transmit the Software, and to prepare derivative works of the
-Software, and to permit third-parties to whom the Software is furnished to
-do so, all subject to the following:
-
-The copyright notices in the Software and this entire statement, including
-the above license grant, this restriction and the following disclaimer,
-must be included in all copies of the Software, in whole or in part, and
-all derivative works of the Software, unless such copies or derivative
-works are solely in the form of machine-executable object code generated by
-a source language processor.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
-SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
-FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
-ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-+/

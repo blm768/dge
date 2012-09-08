@@ -19,6 +19,7 @@ enum {
 	size_t stencilBufferSize = 8,
 
 	size_t maxLightsPerObject = 8,
+	size_t maxMirrorReflections = 1,
 }
 
 template DerelictGLVersion(uint major, uint minor) {
