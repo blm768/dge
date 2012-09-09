@@ -124,7 +124,7 @@ class CollisionObject: NodeGroup {
 				continue;
 			checkAgainstObject(ob, result);
 			if(result.foundCollision) {
-				(cast(MeshNode)firstChild).mesh.faceGroups[0].material.diffuse = Color(1, 0, 0);
+				//(cast(MeshNode)firstChild).mesh.faceGroups[0].material.diffuse = Color(1, 0, 0);
 			}
 		}
 	}
@@ -276,76 +276,70 @@ class CollisionObject: NodeGroup {
 		float radius0 = widthRadius, radius1 = other.widthRadius;
 
 		//Sweep against the cylindrical section of the capsule.
-		{
-			float paddedRadius = radius0 + radius1;
+		float paddedRadius = radius0 + radius1;
 
-			//The start and direction of the line segment representing the first capsule
-			Vector3 segStart = worldPosition;
-			Vector3 segDir = worldRotation * Vector3(0, 1, 0);
+		//The start and direction of the line segment representing the first capsule
+		Vector3 segStart = worldPosition;
+		Vector3 segDir = worldRotation * Vector3(0, 1, 0);
 
-			//The center and direction of the cylinder
-			Vector3 cylStart = other.worldPosition;
-			Vector3 cylDir = other.worldRotation * Vector3(0, 1, 0);
+		//The center and direction of the cylinder
+		Vector3 cylStart = other.worldPosition;
+		Vector3 cylDir = other.worldRotation * Vector3(0, 1, 0);
 
-			//The velocity of the second object relative to the first
-			Vector3 velocity = other.velocity - this.velocity;
+		//The velocity of the second object relative to the first
+		Vector3 velocity = other.velocity - this.velocity;
 
-			//We pretend to be intersecting a circle and a 2D segment, then generalize it to 3D. Sort of.
-			Vector3 cylToSeg = segStart - cylStart;
-			float locOnSeg = dot(cylToSeg, segDir);
-			//Is the collision point actually within the segment?
-			if(locOnSeg > -halfHeight0 && locOnSeg < halfHeight0) {
-				//Make cylinderToSeg perpendicular to the segment.
-				cylToSeg -= segDir * locOnSeg;
-				float locOnCyl = dot(cylToSeg, cylDir);
+		//We pretend to be intersecting a circle and a 2D segment, then generalize it to 3D. Sort of.
+		Vector3 cylToSeg = segStart - cylStart;
+		float locOnSeg = dot(cylToSeg, segDir);
+		//Is the collision point actually within the segment?
+		if(locOnSeg > -halfHeight0 && locOnSeg < halfHeight0) {
+			//Make cylinderToSeg perpendicular to the segment.
+			cylToSeg -= segDir * locOnSeg;
+			float locOnCyl = dot(cylToSeg, cylDir);
 
-				//Flatten the vector along the cylinder's axis.
-				Vector3 cylToSegFlat = cylToSeg - cylDir * locOnSeg;
+			//Flatten the vector along the cylinder's axis.
+			Vector3 cylToSegFlat = cylToSeg - cylDir * locOnSeg;
 
-				Vector3 dir = cylToSegFlat.normalized;
-				float vDotDir = dot(velocity, dir);
+			Vector3 dir = cylToSegFlat.normalized;
+			float vDotDir = dot(velocity, dir);
 
-				//Is the relative velocity in the right direction?
-				//To do: move up to cull extra endpoint-center collisions?
-				if(vDotDir <= 0) {
-					//No; return.
-					return;
-				}
-
-				//Is there a collision with the cylinder's surface?
-				if(locOnCyl > -halfHeight1 && locOnCyl < halfHeight1) {
-					float distToSeg = cylToSegFlat.magnitude;
-					//The minimum velocity needed for a collision
-					float minCollisionVelocity = distToSeg - radius0 - radius1;
-
-					//Is there a collision in this frame?
-					if(vDotDir >= minCollisionVelocity) {
-						result.registerCollision(worldPosition - cylToSegFlat, vDotDir, other);
-					}
-
-				}
-				//Is there a collision with the capsule's ends?
-				Vector3 vNormalized = velocity.normalized();
-				int i = -1, j = -1;
-				//i and j alternate between positive and negative.
-				do {
-					do {
-						TraceResult tResult = traceAgainstSphere(segStart + i * segDir * halfHeight0, segDir,
-							cylStart + j * cylDir * halfHeight1, paddedRadius);
-						if(tResult.foundIntersection) {
-							result.registerCollision(tResult.position, tResult.distance, other);
-						}
-						j *= -1;
-					} while (j > 0);
-					i *= -1;
-				} while (i > 0);
-			} else {
-				//The collision is not on the segment; test the ends of the first object.
+			//Is the relative velocity in the right direction?
+			//To do: move up to cull extra endpoint-center collisions?
+			if(vDotDir <= 0) {
+				//No; return.
+				return;
 			}
 
-			//writeln(distToSeg);
+			//Is there a collision with the cylinder's surface?
+			if(locOnCyl > -halfHeight1 && locOnCyl < halfHeight1) {
+				float distToSeg = cylToSegFlat.magnitude;
+				//The minimum velocity needed for a collision
+				float minCollisionVelocity = distToSeg - radius0 - radius1;
 
+				//Is there a collision in this frame?
+				if(vDotDir >= minCollisionVelocity) {
+					result.registerCollision(worldPosition - cylToSegFlat, vDotDir, other);
+				}
+
+			}
 		}
+
+		//Test the endpoints:
+		Vector3 vNormalized = velocity.normalized();
+		int i = -1, j = -1;
+		//i and j alternate between positive and negative.
+		do {
+			do {
+				TraceResult tResult = traceAgainstSphere(segStart + i * segDir * halfHeight0, -vNormalized,
+					cylStart + j * cylDir * halfHeight1, paddedRadius);
+				if(tResult.foundIntersection && tResult.distance <= velocity.mag) {
+					result.registerCollision(tResult.position - cylToSeg.normalized * radius0, tResult.distance, other);
+				}
+				j *= -1;
+			} while (j > 0);
+			i *= -1;
+		} while (i > 0);
 	}
 }
 
@@ -369,7 +363,7 @@ struct CollisionResult {
 	}
 
 	//To do: integrate with above?
-	void registerCollision(Vector3 collisionPoint, float distance, CollisionObject obstacle) {
+	void registerCollision(Vector3 collisionPoint, float distance, CollisionObject object) {
 		//Is this collision closer than the last one?
 		if(!foundCollision || distance < nearestDistance) {
 			foundCollision = true;

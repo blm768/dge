@@ -9,16 +9,18 @@ TraceResult traceAgainstSphere(Vector3 rayStart, Vector3 rayDir, Vector3 sphereP
 	//Luckily, a = 1.
 	auto det = b * b - 4 * c;
 
-	float du;
+	float dist;
 	if(det > 0) {
-		du = (-b - sqrt(det)) / 2;
-		if(du < 0) {
-			du = (-b + sqrt(det)) / 2;
+		dist = (-b - sqrt(det)) / 2;
+		if(dist < 0) {
+			dist = (-b + sqrt(det)) / 2;
 		}
+	} else {
+		return TraceResult(false);
 	}
 
-	if(du > 0) {
-		return TraceResult(true, rayDir * du + rayStart, du);
+	if(dist > 0) {
+		return TraceResult(true, rayDir * dist + rayStart, dist);
 	}
 	return TraceResult(false);
 }
