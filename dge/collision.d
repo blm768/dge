@@ -5,6 +5,7 @@ module dge.collision;
 
 import dge.graphics.scene;
 import dge.math;
+import dge.mathext.intersection;
 
 //To do: remove when done.
 import std.stdio;
@@ -297,7 +298,7 @@ class CollisionObject: NodeGroup {
 			//The velocity of the second object relative to the first
 			Vector3 velocity = other.velocity - this.velocity;
 
-			//We pretend to be intersecting a circle and a 2D segment, then generalize it to 3D.
+			//We pretend to be intersecting a circle and a 2D segment, then generalize it to 3D. Sort of.
 			Vector3 cylToSeg = segStart - cylStart;
 			float locOnSeg = dot(cylToSeg, segDir);
 			//Is the collision point actually within the segment?
@@ -330,8 +331,12 @@ class CollisionObject: NodeGroup {
 						//result.collisionPoint =
 					}
 
+				} else {
+					//If there's a collision, it's with the
 				}
 
+			} else {
+				//The collision is not on the segment; test the ends of the first object.
 			}
 
 			//writeln(distToSeg);

@@ -1,0 +1,2 @@
+module dge.mathext.intersection;
+
