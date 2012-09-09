@@ -1,12 +1,10 @@
 /++
 Scenegraph objects
-
-To do: use linked-list tree instead of AAs.
 +/
 module dge.graphics.scene;
 
 import core.exception;
-import std.bitmanip;
+//import std.bitmanip;
 import std.math;
 import std.stdio;
 
@@ -25,7 +23,7 @@ import dge.util.list;
 class Scene: NodeGroup {
 	this() {
 		scene = this;
-		parent = this;
+		_parent = this;
 	}
 
 	void render() {
@@ -80,27 +78,6 @@ class NodeGroup: Node {
 		}
 	}
 
-	Node addNode(Node n) {
-		if(n.parent !is null)
-			throw new Error("Attempt to add a node to more than one parent");
-		children.add(n);
-		n.parent = this;
-		if(scene !is null) {
-			n.onAddToScene();
-		}
-		return n;
-	}
-
-	void removeNode(Node n) {
-		if(children.contains(n)) {
-			if(scene !is null) {
-				n.onRemoveFromScene();
-			}
-			children.remove(n);
-			n.parent = null;
-		}
-	}
-
 	override void update() {
 		foreach(Node n; children) {
 			n.update();
@@ -121,7 +98,18 @@ class NodeGroup: Node {
 		super.onRemoveFromScene();
 	}
 
-	Set!Node children;
+	void onAddChild(Node child) {
+		if(scene) {
+			child.onAddToScene();
+		}
+	}
+	void onRemoveChild(Node child) {
+		if(scene) {
+			child.onRemoveFromScene();
+		}
+	}
+
+	mixin parentNode!(Node, true);
 }
 
 abstract class Node {
@@ -130,6 +118,9 @@ abstract class Node {
 	void draw() {}
 
 	void update() {}
+
+	void onAdd () {}
+	void onRemove() {}
 
 	void onAddToScene() {
 		scene = parent.scene;
@@ -226,7 +217,8 @@ abstract class Node {
 		}
 	}
 
-	Node parent;
+	mixin childNode!(NodeGroup, true);
+	mixin commonNode!(NodeGroup, Node);
 	Scene scene;
 
 	private:
