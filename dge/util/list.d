@@ -1,7 +1,7 @@
 /++
 Utilities for linked-list node trees
 +/
-module gui.util.list;
+module dge.util.list;
 
 mixin template commonNode(Parent, Child) {
 	//To do: make sure that this always instantiated using the *child's* "this" pointer, not the parent's?
