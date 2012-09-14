@@ -74,22 +74,20 @@ class CollisionObject: NodeGroup {
 			}
 
 			//Otherwise, there's a collision.
-			Vector3 dest = position + velocity;
-			Vector3 newBasePoint = position;
+
+			float distance = velocity.magnitude * result.t;
 
 			//If we're far enough away, move toward the collision point.
-			if(result.nearestDistance >= veryCloseDistance) {
+			if(distance >= veryCloseDistance) {
 				Vector3 v = velocity.normalized();
-				newBasePoint = newBasePoint + (v * (result.nearestDistance - veryCloseDistance));
-				result.position = result.position - veryCloseDistance*v;
+				position = position + (v * (distance - veryCloseDistance));
 			}
 
 			//Slide.
-			Plane slidingPlane = Plane(result.normal, result.position);
+			//To do: adjust.
+			Plane slidingPlane = Plane(result.normal, position);
 
-			Vector3 newDest = dest - slidingPlane.signedDistanceTo(dest) * slidingPlane.normal;
-
-			position = newBasePoint;
+			//Vector3 newDest = dest - slidingPlane.signedDistanceTo(dest) * slidingPlane.normal;
 
 			onCollision(result.obstacle, slidingPlane.normal);
 
@@ -141,7 +139,7 @@ class CollisionObject: NodeGroup {
 		}
 	}
 
-	//To do: convert results from ellipsoid space.
+	//To do: remove collisionPoint?
 	void checkAgainstTriangle(CollisionObstacle obstacle, Vector3[3] p, const ref CollisionInput input, ref CollisionResult result) {
 		//Convert to ellipsoid space.
 		p[0] = toESpace(p[0]);
@@ -161,7 +159,7 @@ class CollisionObject: NodeGroup {
 		}
 		float planeDist = plane.signedDistanceTo(position);
 
-		//To do: determine if t1 is even needed.
+		//To do: keep t1? (could be moderately useful)
 		float t0, t1;
 		bool embeddedInPlane;
 
@@ -262,8 +260,7 @@ class CollisionObject: NodeGroup {
 		}
 
 		if(foundCollision) {
-			float distance = t * fromESpace(velocity).magnitude;
-			result.registerCollision(fromESpace(collisionPoint + plane.normal), plane.normal, distance, obstacle);
+			result.registerCollision(t, fromESpace(plane.normal).normalized, obstacle);
 		}
 	}
 
@@ -277,6 +274,7 @@ class CollisionObject: NodeGroup {
 		float paddedRadius = radius0 + radius1;
 
 		//The time of collision
+		//To do: use t0, t1?
 		float t;
 
 		//The start and direction of the line segment representing the first capsule
@@ -321,7 +319,7 @@ class CollisionObject: NodeGroup {
 
 				//Is the collision on the cylinder's center?
 				if(endOnCyl > -halfHeight1 && endOnCyl < halfHeight1) {
-					//result.registerCollision();
+					result.registerCollision(t, dir, other);
 				}
 			}
 
@@ -347,7 +345,8 @@ class CollisionObject: NodeGroup {
 				Vector3 center1 = cylStart + j * cylDir * halfHeight1;
 				TraceResult tResult = traceAgainstSphere(center0, -vNormalized, center1, paddedRadius);
 				if(tResult.foundIntersection && tResult.distance <= velocity.mag) {
-					//result.registerCollision(tResult.position + (center1 - center0).normalized * radius0, tResult.distance, other);
+					Vector3 normal = (center0 - center1).normalized;
+					result.registerCollision(t, normal, other);
 				}
 				j *= -1;
 			} while (j > 0);
@@ -358,33 +357,30 @@ class CollisionObject: NodeGroup {
 
 struct CollisionResult {
 	bool foundCollision;
-	float nearestDistance;
-	//The position of the object when it collides
-	Vector3 position;
+	//The time in the frame that the collision happens
+	float t;
 	Vector3 normal;
 	union {
 		CollisionObstacle obstacle;
 		CollisionObject object;
 	}
 
-	void registerCollision(Vector3 position, Vector3 normal, float distance, CollisionObstacle obstacle) {
+	void registerCollision(float t, Vector3 normal, CollisionObstacle obstacle) {
 		//Is this collision closer than the last one?
-		if(!foundCollision || distance < nearestDistance) {
+		if(!foundCollision || t < this.t) {
 			foundCollision = true;
-			nearestDistance = distance;
-			this.position = position;
+			this.t = t;
 			this.normal = normal;
 			this.obstacle = obstacle;
 		}
 	}
 
 	//To do: integrate with above?
-	void registerCollision(Vector3 position, Vector3 normal, float distance, CollisionObject object) {
+	void registerCollision(float t, Vector3 normal, CollisionObject object) {
 		//Is this collision closer than the last one?
-		if(!foundCollision || distance < nearestDistance) {
+		if(!foundCollision || t < this.t) {
 			foundCollision = true;
-			nearestDistance = distance;
-			this.position = position;
+			this.t = t;
 			this.normal = normal;
 			this.object = object;
 		}
