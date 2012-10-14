@@ -403,7 +403,7 @@ class TagCompound: PayloadTag!(Tag[][string]) {
 	}
 
 	Tag get(Type)(string name, Type defaultValue = null) if(is(Type: Tag)) {
-		return cast(Type)get(name, NBTFile.typeId!Type, defaultValue);
+		return cast(Type)get(name, Tag.typeId!Type, defaultValue);
 	}
 
 	alias value tags;

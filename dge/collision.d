@@ -106,6 +106,8 @@ class CollisionObject: NodeGroup {
 		if(parent !is scene) {
 			this.position = parent.inverseWorldTransform * this.position;
 		}
+
+		//writeln(position);
 	}
 
 	void checkCollisions(ref CollisionResult result) {
@@ -260,11 +262,12 @@ class CollisionObject: NodeGroup {
 		}
 
 		if(foundCollision) {
-			result.registerCollision(t, fromESpace(plane.normal).normalized, obstacle);
+			//Normal is already a unit vector.
+			result.registerCollision(t, fromESpace(position - collisionPoint).normalized, obstacle);
 		}
 	}
 
-	//Compensate for: radius, relative velocity
+	//To do: fix clipping on center-center collisions.
 	void checkAgainstObject(CollisionObject other, ref CollisionResult result) {
 		float halfHeight0 = (heightRadius - widthRadius);
 		float halfHeight1 = (other.heightRadius - other.widthRadius);
@@ -288,65 +291,77 @@ class CollisionObject: NodeGroup {
 		//The velocity of the second object relative to the first
 		Vector3 velocity = other.velocity - this.velocity;
 
-		//We pretend to be intersecting a circle and a 2D segment, then generalize it to 3D. Sort of.
-		Vector3 cylToSeg = segStart - cylStart;
+		//To do: center-center collisions
 
-		//The starting position of the cylinder projected onto the segment
-		float startOnSeg = dot(cylToSeg, segDir);
-		//Make cylinderToSeg perpendicular to the segment.
+		//Is there a center-end collision?
+		int i = -1;
+		do {
+			//Consolidate multiplications?
+			Vector3 end1Start = cylStart + i * cylDir * halfHeight1;
+			Vector3 end1StartToSeg = segStart - end1Start;
+			float end1StartOnSeg = dot(end1StartToSeg, segDir);
+			end1StartToSeg -= end1StartOnSeg * segDir;
 
-		cylToSeg -= segDir * startOnSeg;
+			float end1DistToSeg = end1StartToSeg.magnitude;
+			Vector3 dir = end1StartToSeg / end1DistToSeg;
 
-		//Flatten the vector along the cylinder's axis.
-		Vector3 cylToSegFlat = cylToSeg - cylDir * startOnSeg;
-		float distToSeg = cylToSegFlat.magnitude;
+			float vDotDir = dot(velocity, dir);
 
-		Vector3 dir = cylToSegFlat.normalized;
-		float vDotDir = dot(velocity, dir);
+			t = (end1DistToSeg - paddedRadius) / vDotDir;
 
-		//If vDotDir == 0, we get +-float.infinity, and the next check fails as planned.
-		t = distToSeg / vDotDir;
+			if(t > 0 && t <= 1) {
+				//To do: consolidate dot products?
+				float end1EndOnSeg = end1StartOnSeg + t * dot(velocity, segDir);
 
-		//Is the collision within this frame?
-		if(t > 0 && t <= 1) {
-			//Yes; perform a center-center test.
-			float endOnSeg = dot(segDir, velocity * t);
-
-			//Is the end position on the segment?
-			if(endOnSeg > -halfHeight0 && endOnSeg < halfHeight0) {
-				//Equivalent to dot(-velocity * t - cylToSeg; just a little faster.
-				float endOnCyl = -dot(velocity * t + cylToSeg, cylDir);
-
-				//Is the collision on the cylinder's center?
-				if(endOnCyl > -halfHeight1 && endOnCyl < halfHeight1) {
-					result.registerCollision(t, dir, other);
+				//Is there a collision?
+				if(end1EndOnSeg > -halfHeight0 && end1EndOnSeg < halfHeight0) {
+					result.registerCollision(t, -dir, other);
 				}
 			}
+			i *= -1;
+		} while (i > 0);
 
-			//Is there a center-end collision?
-			int i = -1;
-			do {
-				//Sweep the endpoints against the first object's center.
-				TraceResult tResult = traceAgainstSphere(cylStart + i * cylDir * halfHeight1, dir, segStart + segDir * startOnSeg, paddedRadius);
-				if(tResult.foundIntersection) {
-					//result.registerCollision(tResult.position - dir * radius1 + segDir * startOnSeg, tResult.distance, other);
+		//Is there an end-center collision?
+		i = -1;
+		do {
+			//Consolidate multiplications?
+			Vector3 end0Start = segStart + i * segDir * halfHeight0;
+			Vector3 end0StartToCyl = cylStart - end0Start;
+			float end0StartOnCyl = dot(end0StartToCyl, cylDir);
+			end0StartToCyl -= end0StartOnCyl * cylDir;
+
+			float end0DistToCyl = end0StartToCyl.magnitude;
+			Vector3 dir = end0StartToCyl / end0DistToCyl;
+
+			float vDotDir = dot(velocity, dir);
+
+			t = (end0DistToCyl - paddedRadius) / vDotDir;
+
+			if(t > 0 && t <= 1) {
+				//To do: consolidate dot products?
+				float end0EndOnCyl = end0StartOnCyl + t * dot(velocity, cylDir);
+
+				//Is there a collision?
+				if(end0EndOnCyl > -halfHeight1 && end0EndOnCyl < halfHeight1) {
+					result.registerCollision(t, -dir, other);
 				}
-				i *= -1;
-			} while (i > 0);
-		}
+			}
+			i *= -1;
+		} while (i > 0);
 
 		//Test the endpoints:
 		Vector3 vNormalized = velocity.normalized();
-		int i = -1, j = -1;
+		i = -1;
+		int j = -1;
 		//i and j alternate between positive and negative.
 		do {
 			do {
-				Vector3 center0 = segStart + i * segDir * halfHeight0;
-				Vector3 center1 = cylStart + j * cylDir * halfHeight1;
-				TraceResult tResult = traceAgainstSphere(center0, -vNormalized, center1, paddedRadius);
+				Vector3 end0 = segStart + i * segDir * halfHeight0;
+				Vector3 end1 = cylStart + j * cylDir * halfHeight1;
+				TraceResult tResult = traceAgainstSphere(end0, -vNormalized, end1, paddedRadius);
 				if(tResult.foundIntersection && tResult.distance <= velocity.mag) {
-					Vector3 normal = (center0 - center1).normalized;
-					result.registerCollision(t, normal, other);
+					Vector3 normal = (end0 - end1).normalized;
+					result.registerCollision(tResult.distance / velocity.mag, normal, other);
 				}
 				j *= -1;
 			} while (j > 0);
