@@ -579,7 +579,7 @@ class NBMFile {
 		//To do: multitexturing
 		auto tagString = cast(TagString)tagMat.get("Texture", TagType.String);
 		if(tagString) {
-			mat.texture = load!Texture(tagString.value, searchPath);
+			mat.texture = load!Texture2D(tagString.value, searchPath);
 		}
 
 		tagString = cast(TagString)tagMat.get("Fragment shader", TagType.String);

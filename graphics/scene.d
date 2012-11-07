@@ -20,18 +20,28 @@ import dge.math;
 import dge.util.array;
 import dge.util.list;
 
+/++
+A scene containing meshes, cameras, etc.
++/
 class Scene: NodeGroup {
+	///
 	this() {
-		scene = this;
+		_scene = this;
 		_parent = this;
 	}
 
+	/++
+	Renders the scene from the viewpoint of the active camera
+	+/
 	void render() {
 		assert(activeCamera, "No active camera");
 		activeCamera.render();
 		++_currentFrame;
 	}
 
+	/++
+	Adds a node to a rendering pass
+	+/
 	void addNodeToPass(PassId pass, Node n) {
 		Set!Node* layer = pass in renderLayers;
 		if(!layer) {
@@ -41,6 +51,9 @@ class Scene: NodeGroup {
 		layer.add(n);
 	}
 
+	/++
+	Removes a node from a rendering pass
+	+/
 	void removeNodeFromPass(PassId pass, Node n) {
 		try {
 			renderLayers[pass].remove(n);
@@ -53,11 +66,16 @@ class Scene: NodeGroup {
 
 	Color diffuseLight;
 
+	///
 	Set!CameraNode cameras;
+	///
 	Set!LightNode lights;
+	///
 	CameraNode activeCamera;
 
+	///
 	Set!CollisionObject collisionObjects;
+	///
 	Set!CollisionObstacle collisionObstacles;
 
 	///Incremented each time the scene is rendered; used to synchronize updates
@@ -69,15 +87,21 @@ class Scene: NodeGroup {
 	uint _currentFrame;
 }
 
+/++
+A node containing child nodes
++/
 class NodeGroup: Node {
 	public:
-
+	/++
+	Draws the node's children
+	+/
 	override void draw() {
 		foreach(Node n; children) {
 			n.draw();
 		}
 	}
 
+	///
 	override void update() {
 		foreach(Node n; children) {
 			n.update();
@@ -112,18 +136,36 @@ class NodeGroup: Node {
 	mixin parentNode!(Node, true);
 }
 
+/++
+A scenegraph node
++/
 abstract class Node {
 	this() {}
 
+	/++
+	Draws the node
+	+/
 	void draw() {}
 
+	/++
+	Updates the node
+	+/
 	void update() {}
 
+	/++
+	Called when the node is added to a NodeGroup
+	+/
 	void onAdd () {}
+	/++
+	Called when the node is removed from a NodeGroup
+	+/
 	void onRemove() {}
 
+	/++
+	Called when the node is added to the scene
+	+/
 	void onAddToScene() {
-		scene = parent.scene;
+		_scene = parent.scene;
 
 		//Synchronize with the scene.
 		_lastPositionUpdate = scene.currentFrame - 1;
@@ -132,13 +174,17 @@ abstract class Node {
 		_lastInverseTransformUpdate = _lastPositionUpdate;
 	}
 
-	void onRemoveFromScene() {scene = null;}
+	/++
+	Called when the node is removed from the scene
+	+/
+	void onRemoveFromScene() {_scene = null;}
 
-	///Returns a matrix representing the node's local transformation
+	///The node's local transformation
 	@property TransformMatrix transform() {
 		return translationMatrix(position) * rotation;
 	}
 
+	///The node's inverse local transformation
 	@property TransformMatrix inverseTransform() {
 		return rotation.transposed * translationMatrix(-position);
 	}
@@ -159,6 +205,7 @@ abstract class Node {
 		return _worldTransform;
 	}
 
+	///
 	@property TransformMatrix inverseWorldTransform() {
 		if(_lastInverseTransformUpdate != scene.currentFrame) {
 			if(parent !is scene) {
@@ -171,6 +218,7 @@ abstract class Node {
 		return _inverseWorldTransform;
 	}
 
+	///
 	@property Vector3 worldPosition() {
 		if(_lastPositionUpdate != scene.currentFrame) {
 			if(parent !is scene) {
@@ -183,6 +231,7 @@ abstract class Node {
 		return _worldPosition;
 	}
 
+	///
 	@property TransformMatrix worldRotation() {
 		if(_lastRotationUpdate != scene.currentFrame) {
 			if(parent !is scene) {
@@ -195,10 +244,12 @@ abstract class Node {
 		return _worldRotation;
 	}
 
+	///
 	@property Vector3 position() const {
 		return _position;
 	}
 
+	///
 	@property void position(Vector3 value) {
 		_position = value;
 		if(scene) {
@@ -206,10 +257,12 @@ abstract class Node {
 		}
 	}
 
+	///
 	@property TransformMatrix rotation() const {
 		return _rotation;
 	}
 
+	///
 	@property void rotation(TransformMatrix value) {
 		_rotation = value;
 		if(scene) {
@@ -219,7 +272,10 @@ abstract class Node {
 
 	mixin childNode!(NodeGroup, true);
 	mixin commonNode!(NodeGroup, Node);
-	Scene scene;
+
+	@property Scene scene() {
+		return _scene;
+	}
 
 	private:
 	Vector3 _position = Vector3(0.0, 0.0, 0.0);
@@ -233,6 +289,8 @@ abstract class Node {
 	uint _lastTransformUpdate;
 	TransformMatrix _inverseWorldTransform;
 	uint _lastInverseTransformUpdate;
+
+	Scene _scene;
 }
 
 /++
@@ -281,10 +339,14 @@ class CameraNode: Node {
 		}
 	}
 
+	///
 	@property RenderPass activePass() {
 		return _activePass;
 	}
 
+	/++
+	The view matrix
+	+/
 	@property TransformMatrix view() {
 		if(useViewPostTransform) {
 			return viewPostTransform * inverseWorldTransform;
@@ -293,6 +355,7 @@ class CameraNode: Node {
 		}
 	}
 
+	///The projection matrix
 	TransformMatrix projection;
 
 	///Applied to objects after the viewing transform if useViewPostTransform is set
@@ -312,6 +375,9 @@ class CameraNode: Node {
 	RenderPass _activePass;
 }
 
+/++
+A node that draws a mesh
++/
 class MeshNode: Node {
 	public:
 	this() {}
@@ -339,6 +405,9 @@ class MeshNode: Node {
 	Mesh mesh;
 }
 
+/++
+A node that draws an animated mesh
++/
 class AnimatedMeshNode: MeshNode {
 	this(AnimatedMesh am) {
 		animatedMesh = am;
@@ -353,15 +422,22 @@ class AnimatedMeshNode: MeshNode {
 			nextFrame();
 	}
 
+	/++
+	Moves to the next frame of animation
+	+/
 	void nextFrame() {
 		frame = (frame + 1) % animatedMesh.vertexActions[action].frames.length;
 	}
 
+	/++
+	Switches to the first frame of the given action
+	+/
 	void startAction(size_t action) {
 		this.action = action;
 		frame = 0;
 	}
 
+	///
 	size_t actionByName(const(char)[] name) {
 		return animatedMesh.vertexActionLookup[name];
 	}
@@ -372,6 +448,7 @@ class AnimatedMeshNode: MeshNode {
 	bool animating;
 }
 
+///
 class LightNode: Node {
 	this(Vector3 position, Color diffuse, Color specular = Color(0.0, 0.0, 0.0, 1.0)) {
 		this.position = position;
@@ -389,12 +466,22 @@ class LightNode: Node {
 		super.onRemoveFromScene();
 	}
 
+	///
 	Color ambient, diffuse, specular;
+	///
 	Vector3 direction = Vector3(0.0, 0.0, -1.0);
+	///
 	float spotCutoff = 2.0;
+	///
 	float quadraticAttenuation = 0.0;
+	///
 	float spotExponent = 0.0;
 
+	/++
+	Sets up lights for a program
+
+	To do: move to the program?
+	+/
 	static void setProgramLights(DGEShaderProgram program, Scene scene) {
 		size_t i = 0;
 		foreach(LightNode light; scene.lights) {
@@ -406,7 +493,7 @@ class LightNode: Node {
 		program.setUniform(program.matUniforms.numLights, cast(int)i);
 	}
 
-	//To do: make a normal method?
+	//To do: make a normal method? Move to program?
 	static void setProgramLight(DGEShaderProgram program, LightNode light, size_t num) {
 		program.setUniform(program.matUniforms.lights[num].position, light.worldPosition);
 		program.setUniform(program.matUniforms.lights[num].diffuse, light.diffuse);

@@ -141,11 +141,11 @@ class Material {
 		return _program;
 	}
 
-	@property Texture texture() {
+	@property Texture2D texture() {
 		return _texture;
 	}
 
-	@property void texture(Texture tex) {
+	@property void texture(Texture2D tex) {
 		_texture = tex;
 		//Currently unused (switching is done in shader.)
 		//To do: optimize for case when program doesn't change?
@@ -165,26 +165,43 @@ class Material {
 		_program = ShaderProgram.getProgram!DGEShaderProgram(_shaders);
 	}
 
-	Texture _texture;
+	Texture2D _texture;
 
 	ShaderGroup _shaders;
 	DGEShaderProgram _program;
 }
 
+abstract class Texture {
+	//To do: check GL_MAX_COMBINED_TEXTURE_UNITS.
+	void bind(uint unit) {
+		glActiveTexture(GL_TEXTURE0 + unit);
+		glBindTexture(type, _id);
+	}
+
+	void unbind(uint unit) {
+		glActiveTexture(GL_TEXTURE0 + unit);
+		glBindTexture(type, 0);
+	}
+	@property int id() pure const;
+	@property GLenum type();
+
+	//To do: better encapsulation
+	protected:
+	GLuint _id;
+}
+
 /++
 A standard texture
 
-Currently, only PNG files are supported.
+Currently, only PNG files are officially supported.
 +/
-class Texture {
+class Texture2D: Texture {
 	public:
-
 	class TextureLoadError: Error {this(const(char)[] msg) {super(msg.idup);}}
 
 	this(const(char)[] filename, const(char[])[] path = [getcwd()]) {
 		SDL_Surface* surface = null;
-		char[] mName = filename.dup ~ '\0';
-		if((surface = IMG_Load(mName.ptr)) != null) {
+		if((surface = IMG_Load(filename.toStringz)) != null) {
 			glGenTextures(1, &_id);
 			glBindTexture(GL_TEXTURE_2D, _id);
 			GLint mode = GL_RGB;
@@ -201,19 +218,12 @@ class Texture {
 		}
 	}
 
-	//To do: check GL_MAX_COMBINED_TEXTURE_UNITS.
-	void bind(uint unit) {
-		glActiveTexture(GL_TEXTURE0 + unit);
-		glBindTexture(GL_TEXTURE_2D, _id);
-	}
-
-	void unbind(uint unit) {
-		glActiveTexture(GL_TEXTURE0 + unit);
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
-
 	@property int id() pure const {
 		return _id;
+	}
+
+	@property GLenum type() {
+		return GL_TEXTURE_2D;
 	}
 
 	~this() {
@@ -221,8 +231,5 @@ class Texture {
 	}
 
 	bool transparent;
-
-	private:
-	GLuint _id;
 
 }
