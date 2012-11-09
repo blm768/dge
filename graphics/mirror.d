@@ -22,10 +22,12 @@ class MirrorNode: Node {
 	+/
 	override void draw() {
 		//To do: eliminate dynamic cast?
-		auto passData = cast(MirrorPassData)(scene.activeCamera.activePass.data);
-		assert(passData);
+		auto pass = cast(MirrorPass)scene.activeCamera.activePass;
+		if(!pass)
+			writeln(scene.renderLayers);
+		assert(pass);
 
-		if(passData.currentMirror is this) {
+		if(pass.currentMirror is this) {
 			return;
 		}
 
@@ -74,10 +76,10 @@ class MirrorNode: Node {
 		camera.useViewPostTransform = true;
 		glFrontFace(GL_CW);
 
-		auto lastMirror = passData.currentMirror;
-		passData.currentMirror = this;
+		auto lastMirror = pass.currentMirror;
+		pass.currentMirror = this;
 		scene.activeCamera.renderSubPass();
-		passData.currentMirror = lastMirror;
+		pass.currentMirror = lastMirror;
 
 		glFrontFace(GL_CCW);
 		camera.useViewPostTransform = false;
@@ -107,13 +109,20 @@ class MirrorNode: Node {
 	enum TransformMatrix zTransform = TransformMatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 0, 1]]);
 }
 
-private immutable mirror = PassInfo("Mirror");
-PassId mirrorPass = &mirror;
+RenderPass mirrorPass;
 
-class MirrorPassData: PassData {
+static this() {
+	mirrorPass = new MirrorPass;
+}
+
+class MirrorPass: RenderPass {
 	override void onStartPass() {
-		iterations = maxMirrorReflections;
+		iterations = 0;
 		currentMirror = null;
+	}
+
+	override @property bool shouldDraw() {
+		return iterations++ <= maxMirrorReflections;
 	}
 
 	///The number of remaining iterations

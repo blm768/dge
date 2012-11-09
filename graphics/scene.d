@@ -42,7 +42,7 @@ class Scene: NodeGroup {
 	/++
 	Adds a node to a rendering pass
 	+/
-	void addNodeToPass(PassId pass, Node n) {
+	void addNodeToPass(RenderPass pass, Node n) {
 		Set!Node* layer = pass in renderLayers;
 		if(!layer) {
 			scene.renderLayers[pass] = Set!Node();
@@ -54,15 +54,15 @@ class Scene: NodeGroup {
 	/++
 	Removes a node from a rendering pass
 	+/
-	void removeNodeFromPass(PassId pass, Node n) {
+	void removeNodeFromPass(RenderPass pass, Node n) {
 		try {
 			renderLayers[pass].remove(n);
 		} catch (Error e) {
-			throw new Error(`Render pass "` ~ pass.name ~ `" has no associated layer.`);
+			throw new Error(`Render pass "` ~ pass.toString ~ `" has no associated layer.`);
 		}
 	}
 
-	Set!Node[PassId] renderLayers;
+	Set!Node[RenderPass] renderLayers;
 
 	Color diffuseLight;
 
@@ -300,7 +300,7 @@ class CameraNode: Node {
 	///
 	this(TransformMatrix projection) {
 		this.projection = projection;
-		passes = [RenderPass(mirrorPass, new MirrorPassData), RenderPass(opaquePass)];
+		passes = [mirrorPass, opaquePass];
 	}
 
 	override void onAddToScene() {
@@ -329,11 +329,16 @@ class CameraNode: Node {
 	void renderSubPass()() {
 		//Run each rendering pass.
 		foreach(RenderPass pass; passes) {
-			Set!Node* layer = pass.id in scene.renderLayers;
-			if(layer) {
-				_activePass = pass;
-				foreach(Node n; *layer) {
-					n.draw();
+			if(pass.shouldDraw) {
+				Set!Node* layer = pass in scene.renderLayers;
+				if(layer) {
+					_activePass = pass;
+					writeln(_activePass);
+					writeln(*layer);
+					foreach(Node n; *layer) {
+						writeln(n);
+						n.draw();
+					}
 				}
 			}
 		}
@@ -366,9 +371,7 @@ class CameraNode: Node {
 	private:
 	void setUpPasses() {
 		foreach(RenderPass pass; passes) {
-			if(pass.data) {
-				pass.data.onStartPass();
-			}
+			pass.onStartPass();
 		}
 	}
 	RenderPass[] passes;
@@ -387,7 +390,7 @@ class MeshNode: Node {
 	}
 
 	override void draw() {
-		mesh.draw(scene, worldTransform, scene.activeCamera.activePass.id == transparentPass);
+		mesh.draw(scene, worldTransform, scene.activeCamera.activePass is transparentPass);
 	}
 
 	override void onAddToScene() {

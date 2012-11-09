@@ -4,7 +4,9 @@ Utilities for arrays
 
 module dge.util.array;
 
-import std.array;
+import std.algorithm;
+import std.conv;
+import std.range;
 
 /++
 A simple set.
@@ -69,6 +71,17 @@ struct Set(T) {
 				break;
 		}
 		return result;
+	}
+
+	@property string toString() {
+		string s = "Set(";
+		foreach(item, dummy; items) {
+			s ~= item.to!string;
+			s ~= ", ";
+		}
+		s = s[0 .. $ - 2];
+		s ~= ")";
+		return s;
 	}
 
 	private:
