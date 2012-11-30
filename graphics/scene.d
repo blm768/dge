@@ -92,14 +92,6 @@ A node containing child nodes
 +/
 class NodeGroup: Node {
 	public:
-	/++
-	Draws the node's children
-	+/
-	override void draw() {
-		foreach(Node n; children) {
-			n.draw();
-		}
-	}
 
 	///
 	override void update() {
@@ -337,6 +329,8 @@ class CameraNode: Node {
 					writeln(*layer);
 					foreach(Node n; *layer) {
 						writeln(n);
+					}
+					foreach(Node n; *layer) {
 						n.draw();
 					}
 				}

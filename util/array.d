@@ -33,13 +33,13 @@ struct Set(T) {
 	}
 
 	void add(Set!T other) {
-		foreach(T i, ubyte[0] b; other.items) {
+		foreach(i, dummy; other.items) {
 			add(i);
 		}
 	}
 
 	void remove(Set!T other) {
-		foreach(T i, ubyte[0] b; other.items) {
+		foreach(i, dummy; other.items) {
 			remove(i);
 		}
 	}
@@ -65,7 +65,7 @@ struct Set(T) {
 	int opApply(int delegate(ref T) dg) {
 		int result = 0;
 
-		foreach(T item, ubyte[0] b; items) {
+		foreach(item, dummy; items) {
 			result = dg(item);
 			if (result)
 				break;

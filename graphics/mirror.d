@@ -21,6 +21,7 @@ class MirrorNode: Node {
 	To do: optimize repeated worldTransform() accesses?
 	+/
 	override void draw() {
+		writeln("2: ", scene.activeCamera.activePass);
 		//To do: eliminate dynamic cast?
 		auto pass = cast(MirrorPass)scene.activeCamera.activePass;
 		if(!pass)
@@ -78,7 +79,7 @@ class MirrorNode: Node {
 
 		auto lastMirror = pass.currentMirror;
 		pass.currentMirror = this;
-		scene.activeCamera.renderSubPass();
+		//scene.activeCamera.renderSubPass();
 		pass.currentMirror = lastMirror;
 
 		glFrontFace(GL_CCW);
