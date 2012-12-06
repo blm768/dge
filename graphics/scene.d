@@ -58,7 +58,7 @@ class Scene: NodeGroup {
 		try {
 			renderLayers[pass].remove(n);
 		} catch (Error e) {
-			throw new Error(`Render pass "` ~ pass.toString ~ `" has no associated layer.`);
+			throw new Error(`Render pass "` ~ pass.name ~ `" has no associated layer.`);
 		}
 	}
 
@@ -318,24 +318,21 @@ class CameraNode: Node {
 	}
 
 	///Renders the scene without re-initializing pass data; used for recursive rendering methods
-	void renderSubPass()() {
+	void renderSubPass() {
+		auto oldActivePass = _activePass;
 		//Run each rendering pass.
 		foreach(RenderPass pass; passes) {
 			if(pass.shouldDraw) {
 				Set!Node* layer = pass in scene.renderLayers;
 				if(layer) {
 					_activePass = pass;
-					writeln(_activePass);
-					writeln(*layer);
-					foreach(Node n; *layer) {
-						writeln(n);
-					}
 					foreach(Node n; *layer) {
 						n.draw();
 					}
 				}
 			}
 		}
+		_activePass = oldActivePass;
 	}
 
 	///
@@ -364,6 +361,7 @@ class CameraNode: Node {
 
 	private:
 	void setUpPasses() {
+		_activePass = null;
 		foreach(RenderPass pass; passes) {
 			pass.onStartPass();
 		}

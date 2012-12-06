@@ -21,11 +21,8 @@ class MirrorNode: Node {
 	To do: optimize repeated worldTransform() accesses?
 	+/
 	override void draw() {
-		writeln("2: ", scene.activeCamera.activePass);
 		//To do: eliminate dynamic cast?
 		auto pass = cast(MirrorPass)scene.activeCamera.activePass;
-		if(!pass)
-			writeln(scene.renderLayers);
 		assert(pass);
 
 		if(pass.currentMirror is this) {
@@ -79,7 +76,9 @@ class MirrorNode: Node {
 
 		auto lastMirror = pass.currentMirror;
 		pass.currentMirror = this;
-		//scene.activeCamera.renderSubPass();
+		++pass.iterations;
+		scene.activeCamera.renderSubPass();
+		--pass.iterations;
 		pass.currentMirror = lastMirror;
 
 		glFrontFace(GL_CCW);
@@ -117,16 +116,20 @@ static this() {
 }
 
 class MirrorPass: RenderPass {
+	override @property string name() {
+		return "mirror";
+	}
+
 	override void onStartPass() {
 		iterations = 0;
 		currentMirror = null;
 	}
 
 	override @property bool shouldDraw() {
-		return iterations++ <= maxMirrorReflections;
+		return iterations < maxMirrorReflections;
 	}
 
-	///The number of remaining iterations
+	///The number of iterations
 	size_t iterations;
 	///The mirror from which the scene is currently being rendered
 	MirrorNode currentMirror;

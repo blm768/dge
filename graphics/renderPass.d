@@ -5,19 +5,32 @@ import std.exception;
 public import dge.graphics.scene;
 public import dge.util.array;
 
-class RenderPass {
+abstract class RenderPass {
 	void onStartPass() {}
 	@property bool shouldDraw() {
 		return true;
 	}
+	@property string name();
 }
 
 /++ A rendering pass that renders standard opaque objects. +/
-RenderPass opaquePass;
+class OpaquePass: RenderPass {
+	override @property string name() {
+		return "opaque";
+	}
+}
 
-RenderPass transparentPass;
+OpaquePass opaquePass;
+
+class TransparentPass: RenderPass {
+	override @property string name() {
+		return "transparent";
+	}
+}
+
+TransparentPass transparentPass;
 
 static this() {
-	opaquePass = new RenderPass;
-	transparentPass = new RenderPass;
+	opaquePass = new OpaquePass;
+	transparentPass = new TransparentPass;
 }

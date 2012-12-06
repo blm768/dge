@@ -218,11 +218,11 @@ class Texture2D: Texture {
 		}
 	}
 
-	@property int id() pure const {
+	override @property int id() pure const {
 		return _id;
 	}
 
-	@property GLenum type() {
+	override @property GLenum type() {
 		return GL_TEXTURE_2D;
 	}
 
