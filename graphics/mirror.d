@@ -30,7 +30,6 @@ class MirrorNode: Node {
 		}
 
 		auto camera = scene.activeCamera;
-		auto projection = camera.projection;
 
 		//Put the scene at the mirror's world-space origin and undo its rotation.
 		auto mirrorTransform =  worldRotation.transposed * translationMatrix(-worldPosition) * camera.worldTransform;
@@ -38,8 +37,6 @@ class MirrorNode: Node {
 		mirrorTransform = scaleMatrix(Vector3(1.0, 1.0, -1.0)) * mirrorTransform;
 		//Return the scene to its position.
 		mirrorTransform = camera.inverseWorldTransform * translationMatrix(worldPosition) * worldRotation * mirrorTransform;
-
-		auto maskProjection = zTransform * projection;
 
 		GLdouble[4] planeValues;
 		Vector3 normal = worldRotation * Vector3(0, 0, 1);
@@ -53,36 +50,52 @@ class MirrorNode: Node {
 		}
 		planeValues[3] = d;
 
+		//Set up the stencil buffer.
+
 		//Render the reflection:
 		//To do: set up the clipping plane.
-
-		//Set up the Z-buffer to mask the scene:
-		glClearDepth(0);
-		glClear(GL_DEPTH_BUFFER_BIT);
-		glClearDepth(1);
-		//Set up the projection matrix
-		camera.projection = maskProjection;
-		glDepthFunc(GL_GREATER);
+		//Render the mirror to the depth buffer:
 		glColorMask(0, 0, 0, 0);
+		glDepthMask(false);
+		if(pass.iterations == 0) {
+			//Set the mirror bit to 0.
+			glStencilMask(stencilMask);
+			glClearStencil(0);
+			glStencilMask(stencilMaskAll);
+			glClear(GL_STENCIL_BUFFER_BIT);
+			//Ignore the mirror bit so we can draw the mirror.
+			glStencilFunc(GL_EQUAL, stencilAccept, ~stencilMask);
+		} else {
+			glStencilFunc(GL_EQUAL, stencilAccept, stencilMaskAll);
+		}
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+		//To do: how to place this in the optimal location for the pipeline?
+		glEnable(GL_STENCIL_TEST);
 		mesh.draw(scene, worldTransform, false);
-		glDepthFunc(GL_LESS);
 		glColorMask(1, 1, 1, 1);
+		glDepthMask(true);
 
 		//Render the reflected objects:
-		camera.projection = projection;
-		camera.viewPostTransform = mirrorTransform;
+		bool usePostTransform = camera.useViewPostTransform;
+		auto postTransform = camera.viewPostTransform;
+		if(usePostTransform) {
+			camera.viewPostTransform = mirrorTransform * camera.viewPostTransform;
+		} else {
+			camera.viewPostTransform = mirrorTransform;
+		}
 		camera.useViewPostTransform = true;
 		glFrontFace(GL_CW);
 
 		auto lastMirror = pass.currentMirror;
 		pass.currentMirror = this;
 		++pass.iterations;
+		glStencilFunc(GL_EQUAL, stencilAccept, stencilMaskAll);
 		scene.activeCamera.renderSubPass();
 		--pass.iterations;
 		pass.currentMirror = lastMirror;
-
 		glFrontFace(GL_CCW);
-		camera.useViewPostTransform = false;
+		camera.viewPostTransform = postTransform;
+		camera.useViewPostTransform = usePostTransform;
 
 		//To do: reset the clipping plane.
 
@@ -90,8 +103,11 @@ class MirrorNode: Node {
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		//Render the mirror surface.
-		camera.projection = projection;
 		mesh.draw(scene, worldTransform, true);
+
+		if(pass.iterations == 0) {
+			glStencilFunc(GL_EQUAL, stencilAccept, ~stencilMask);
+		}
 	}
 
 	override void onAddToScene() {
@@ -106,7 +122,9 @@ class MirrorNode: Node {
 
 	Mesh mesh;
 
-	enum TransformMatrix zTransform = TransformMatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 0, 1]]);
+	//enum TransformMatrix zTransform = TransformMatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 0, 1]]);
+
+	enum GLuint stencilMask = 1;
 }
 
 RenderPass mirrorPass;

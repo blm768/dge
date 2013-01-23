@@ -212,19 +212,19 @@ struct ShaderGroup {
 class Shader {
 	this(const(char)[] shader, GLenum type) {
 		shaderId = glCreateShader(type);
-		const(char)*[1] shaderStrings = [shader.ptr];
-		const(int)[1] shaderLengths = [cast(int)shader.length];
-		glShaderSource(shaderId, 1, shaderStrings.ptr, shaderLengths.ptr);
+		const(char)* ptr = shader.ptr;
+		int len = cast(int)shader.length;
+		glShaderSource(shaderId, 1, &ptr, &len);
 		glCompileShader(shaderId);
 		int compiled;
 		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compiled);
 		if(!compiled) {
 			//The shader didn't compile.
 			char[] msg;
-			int len;
-			glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &len);
-			msg.length = cast(size_t)len;
-			glGetShaderInfoLog(shaderId, len, &len, msg.ptr);
+			int msg_len;
+			glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &msg_len);
+			msg.length = cast(size_t)msg_len;
+			glGetShaderInfoLog(shaderId, msg_len, &msg_len, msg.ptr);
 			throw new Error("Unable to compile shader: " ~ msg.idup);
 		}
 	}
