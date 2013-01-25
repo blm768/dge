@@ -7,6 +7,7 @@ import std.stdio;
 import std.string;
 
 import dge.config;
+import dge.edc;
 public import dge.graphics.material;
 import dge.math;
 
@@ -258,31 +259,12 @@ class FragmentShader: Shader {
 	}
 }
 
-private string defaultVertexShaderText = `
-#version 330
-
-uniform mat4 model, view, projection;
-
-in vec3 position;
-in vec3 normal;
-in vec2 texCoord;
-
-out vec4 fragViewPosition;
-out vec3 fragViewNormal;
-out vec2 fragTexCoord;
-
-void main() {
-	fragViewPosition = view * model * vec4(position, 1.0);
-	gl_Position = projection * fragViewPosition;
-	fragViewNormal = vec3(view * model * vec4(normal, 0.0));
-	fragTexCoord = texCoord;
-}
-`;
+alias readEdc!("default.vert.edc") defaultVertexShaderText;
 
 @property VertexShader defaultVertexShader() {
 	static VertexShader shader;
 	if(!shader) {
-		shader = new VertexShader(defaultVertexShaderText);
+		shader = new VertexShader(defaultVertexShaderText());
 	}
 	return shader;
 }
@@ -309,98 +291,12 @@ void main() {
 	return shader;
 }
 
-private string materialFragmentShaderText = `
-#version 330
-
-uniform mat4 view, projection;
-
-uniform vec4 diffuse, specular, emission;
-uniform float shininess;
-
-uniform bool useTexture;
-uniform sampler2D surface;
-
-struct Light {
-	vec3 position;
-	vec4 diffuse;
-	vec4 ambient;
-	vec4 specular;
-	vec3 direction;
-	float spotCutoff;
-	float quadraticAttenuation;
-	float spotExponent;
-};
-
-uniform int numLights;
-uniform Light[` ~ to!string(maxLightsPerObject) ~ `] lights;
-
-in vec4 fragViewPosition;
-in vec3 fragViewNormal;
-in vec2 fragTexCoord;
-
-//To do: figure out how to handle material's ambient color.
-//To do: remove conditionals?
-//To do:
-vec3 lighting(const Light light, vec3 color) {
-	//Is this a directional (sun) light?
-	if(light.spotCutoff <= 0.0) {
-		return light.diffuse.rgb * max(0.0, dot(fragViewNormal, (view * -vec4(light.direction, 0.0)).rgb ));
-	} //else
-
-	vec3 fragmentToLight = (view * vec4(light.position, 1.0) - fragViewPosition).xyz;
-	float distSquared = dot(fragmentToLight, fragmentToLight);
-	float attenuation = 1 / (light.quadraticAttenuation * distSquared);
-	vec3 direction = normalize(fragmentToLight);
-
-	//Is it a spotlight?
-	if(light.spotCutoff <= 1.0) {
-		//To do: cache dot product?
-		float clampedCos = max(0.0, dot(-direction, (view * vec4(light.direction, 0.0)).xyz));
-		if(clampedCos < light.spotCutoff) {
-			attenuation = 0.0;
-		} else {
-			attenuation *= pow(clampedCos, light.spotExponent);
-		}
-	}
-
-	vec3 lighting = light.diffuse.rgb * max(0.0, dot(fragViewNormal, direction)) * attenuation;
-
-	//Calculate specular reflection.
-	//To do: automatically cut out for objects/lights with no specular?
-	vec3 specularLighting;
-
-	//Is the light coming from the right side?
-	if(dot(fragViewNormal, direction) > 0.0) {
-		specularLighting = attenuation * vec3(light.specular) *
-			pow(max(0.0, dot(reflect(-direction, fragViewNormal), -normalize(fragViewPosition.xyz))), shininess);
-	} else {
-		specularLighting = vec3(0.0, 0.0, 0.0);
-	}
-
-	return color * (lighting + light.ambient.xyz) + specular.rgb * specularLighting;
-}
-
-out vec4 fragColor;
-
-void main() {
-	vec4 color = diffuse;
-	if(useTexture) {
-		color *= texture(surface, fragTexCoord);
-	}
-	//To do: optimize conversions.
-	fragColor = vec4(0, 0, 0, 1);
-	for(uint i = 0; i < numLights; ++i) {
-		fragColor.rgb += lighting(lights[i], color.rgb), diffuse.a;
-	}
-	fragColor.rgb += emission.rgb;
-	fragColor.a = color.a;
-}
-`;
+alias readEdc!("material.frag.edc") materialFragmentShaderText;
 
 @property FragmentShader materialFragmentShader() {
 	static FragmentShader shader;
 	if(!shader) {
-		shader = new FragmentShader(materialFragmentShaderText);
+		shader = new FragmentShader(materialFragmentShaderText());
 	}
 	return shader;
 }
