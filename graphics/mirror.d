@@ -74,7 +74,7 @@ class MirrorNode: Node {
 			glStencilMask(stencilMaskAll);
 			glStencilFunc(GL_ALWAYS, 0, 0);
 		} else {
-			glStencilFunc(GL_EQUAL, pass.depth, stencilMaskAll);
+			glStencilFunc(GL_EQUAL, cast(GLint)pass.depth, stencilMaskAll);
 		}
 		glDepthRange(1.0, 1.0);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
@@ -98,7 +98,7 @@ class MirrorNode: Node {
 		++pass.depth;
 		
 		//Render.
-		glStencilFunc(GL_EQUAL, pass.depth, stencilMaskAll);
+		glStencilFunc(GL_EQUAL, cast(GLint)pass.depth, stencilMaskAll);
 		scene.activeCamera.renderSubPass();
 		
 		//Pop data.
@@ -114,7 +114,7 @@ class MirrorNode: Node {
 		if(true || pass.depth == 0) {
 			glStencilFunc(GL_ALWAYS, 0, 0);
 		} else {
-			glStencilFunc(GL_EQUAL, pass.depth, stencilMaskAll);
+			glStencilFunc(GL_EQUAL, cast(GLint)pass.depth, stencilMaskAll);
 		}
 		glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
 		mesh.draw(scene, worldTransform, true);

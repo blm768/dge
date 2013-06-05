@@ -194,8 +194,8 @@ struct Matrix(size_t numRows, size_t numCols) {
 	Matrix!(rows, OtherMatrix.cols) opBinary(string op: "*", OtherMatrix)(OtherMatrix other) const
 			if(__traits(compiles, OtherMatrix.rows) && cols == OtherMatrix.rows) {
 		Matrix!(rows, OtherMatrix.cols) result;
-		for(uint i = 0; i < rows; ++i) {
-			for(uint j = 0; j < OtherMatrix.cols; ++j) {
+		foreach(uint i; 0 .. rows) {
+			foreach(uint j; 0 .. OtherMatrix.cols) {
 				//Do the row-column multiply/add thing:
 				float sum = 0;
 				foreach(uint n, float v; other.values[j]) {
@@ -223,7 +223,7 @@ struct Matrix(size_t numRows, size_t numCols) {
 			if(i >= Other.cols)
 				break;
 			static if(Other.rows < numRows) {
-				//To do: ask if D can be changed to allow this code when the second slice is const?
+				//To do: issue when const?
 				result.values[i][0 .. Other.rows] = col[0 .. Other.rows];
 			} else {
 				result.values[i][0 .. numRows] = col[0 .. numRows][];

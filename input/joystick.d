@@ -22,8 +22,8 @@ class Joystick {
 			throw new Error("Joystick #" ~ to!string(num) ~ " not found.");
 		}
 		this.num = num;
-		name = to!string(SDL_JoystickName(num));
 		js = SDL_JoystickOpen(num);
+		name = SDL_JoystickName(js).to!string();
 		//To do: get uninitialized array or init each element to 0.0
 		axes.length = SDL_JoystickNumAxes(js);
 		//Clear the array to 0.0 so the default NaN doesn't cause problems.
@@ -32,6 +32,11 @@ class Joystick {
 		}
 		buttons.length = SDL_JoystickNumButtons(js);
 		openedJoysticks[num] = this;
+	}
+
+	///Closes the joystick resource
+	void close() {
+		openedJoysticks.remove(num);
 	}
 	
 	~this() {
