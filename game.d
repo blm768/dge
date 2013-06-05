@@ -97,7 +97,7 @@ class Game {
 		frameTimer.start();
 		while(running) {
 			//Handle events during idle time.
-			//We need do/while so the event loop will run at least once.
+			//To do: stop doing so much spinning?
 			do {
 				while(SDL_PollEvent(&evt)) {
 					handleEvent(evt);
@@ -138,6 +138,7 @@ class Game {
 				break;
 			case SDL_JOYAXISMOTION:
 				//Is the value outside the "dead zone?"
+				//To do: make dead zone configurable.
 				if(evt.jaxis.value < -3200 || evt.jaxis.value > 3200) {
 					Joystick.openedJoysticks[evt.jaxis.which].axes[evt.jaxis.axis] = cast(float)evt.jaxis.value/327678.0;
 				} else {

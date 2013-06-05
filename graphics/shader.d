@@ -7,7 +7,6 @@ import std.stdio;
 import std.string;
 
 import dge.config;
-import dge.edc;
 public import dge.graphics.material;
 import dge.math;
 
@@ -295,12 +294,11 @@ class FragmentShader: Shader {
 	}
 }
 
-alias readEdc!("default.vert.edc") defaultVertexShaderText;
 
 @property VertexShader defaultVertexShader() {
 	static VertexShader shader;
 	if(!shader) {
-		shader = new VertexShader(defaultVertexShaderText());
+		//shader = new VertexShader(defaultVertexShaderText());
 	}
 	return shader;
 }
@@ -327,12 +325,10 @@ void main() {
 	return shader;
 }
 
-alias readEdc!("material.frag.edc") materialFragmentShaderText;
-
 @property FragmentShader materialFragmentShader() {
 	static FragmentShader shader;
 	if(!shader) {
-		shader = new FragmentShader(materialFragmentShaderText());
+		//shader = new FragmentShader(materialFragmentShaderText());
 	}
 	return shader;
 }
