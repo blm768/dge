@@ -171,13 +171,22 @@ class Material {
 	DGEShaderProgram _program;
 }
 
+/+
+Base class for all textures
++/
 abstract class Texture {
 	//To do: check GL_MAX_COMBINED_TEXTURE_UNITS.
+	/+
+	Binds the texture to a texture unit
+	+/
 	void bind(uint unit) {
 		glActiveTexture(GL_TEXTURE0 + unit);
 		glBindTexture(type, _id);
 	}
 
+	/+
+	Unbinds the texture from a texture unit
+	+/
 	void unbind(uint unit) {
 		glActiveTexture(GL_TEXTURE0 + unit);
 		glBindTexture(type, 0);
@@ -191,7 +200,7 @@ abstract class Texture {
 }
 
 /++
-A standard texture
+A standard 2D texture
 
 Currently, only PNG files are officially supported.
 +/

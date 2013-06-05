@@ -312,6 +312,7 @@ class CameraNode: Node {
 	}
 
 	///Renders the scene
+	//To do: move glClear calls here?
 	void render() {
 		setUpPasses();
 		renderSubPass();
@@ -344,8 +345,8 @@ class CameraNode: Node {
 	The view matrix
 	+/
 	@property TransformMatrix view() {
-		if(useViewPostTransform) {
-			return viewPostTransform * inverseWorldTransform;
+		if(usePreTransform) {
+			return inverseWorldTransform * preTransform;
 		} else {
 			return inverseWorldTransform;
 		}
@@ -354,10 +355,10 @@ class CameraNode: Node {
 	///The projection matrix
 	TransformMatrix projection;
 
-	///Applied to objects after the viewing transform if useViewPostTransform is set
-	TransformMatrix viewPostTransform;
+	///Applied to objects before the viewing transform if useViewPostTransform is set
+	TransformMatrix preTransform;
 	///
-	bool useViewPostTransform;
+	bool usePreTransform;
 
 	private:
 	void setUpPasses() {

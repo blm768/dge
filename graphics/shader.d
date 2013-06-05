@@ -17,6 +17,7 @@ Represents a shader program
 To do: error checking?
 +/
 class ShaderProgram {
+	///
 	this(VertexShader vs, FragmentShader fs, GeometryShader gs = null) {
 		shaders.vs = vs;
 		shaders.gs = gs;
@@ -24,6 +25,9 @@ class ShaderProgram {
 		prepareProgram();
 	}
 
+	/++
+	To do: make sure that the ShaderGroup is valid.
+	+/
 	this(ShaderGroup group) {
 		shaders = group;
 		prepareProgram();
@@ -48,7 +52,8 @@ class ShaderProgram {
 			glUniform3fv(uniform, 1, vec.ptr);
 		}
 	}
-
+	
+	///ditto
 	void setUniform(int uniform, Vector3[] vec) {
 		if(uniform > -1) {
 			//glProgramUniform3fv(programId, uniform, vec.length, vec.ptr);
@@ -56,7 +61,8 @@ class ShaderProgram {
 			glUniform3fv(uniform, cast(int)vec.length, cast(float*)vec.ptr);
 		}
 	}
-
+	
+	///ditto
 	void setUniform(int uniform, Color c) {
 		if(uniform > -1) {
 			//glProgramUniform4fv(programId, uniform, 1, &c);
@@ -64,7 +70,8 @@ class ShaderProgram {
 			glUniform4fv(uniform, 1, c.ptr);
 		}
 	}
-
+	
+	///ditto
 	void setUniform(int uniform, Color[] c) {
 		if(uniform > -1) {
 			//glProgramUniform4fv(programId, uniform, c.length, c.ptr);
@@ -73,6 +80,7 @@ class ShaderProgram {
 		}
 	}
 
+	///ditto
 	void setUniform(int uniform, TransformMatrix mat) {
 		if(uniform > -1) {
 			use();
@@ -80,6 +88,7 @@ class ShaderProgram {
 		}
 	}
 
+	///ditto
 	void setUniform(int uniform, float value) {
 		if(uniform > -1) {
 			use();
@@ -87,6 +96,7 @@ class ShaderProgram {
 		}
 	}
 
+	///ditto
 	void setUniform(int uniform, int value) {
 		if(uniform > -1) {
 			use();
@@ -94,6 +104,7 @@ class ShaderProgram {
 		}
 	}
 
+	///ditto
 	void setUniform(int uniform, bool value) {
 		if(uniform > -1) {
 			use();
@@ -101,16 +112,25 @@ class ShaderProgram {
 		}
 	}
 
+	/++
+	Finishes using the program
+	+/
 	void finish() {
 		glUseProgram(0);
 	}
 
+	/++
+	Gets the index to which a uniform should be bound
+	+/
 	int getUniformLocation(const(char)[] name) {
 		//To do: remove?
 		use();
 		return glGetUniformLocation(programId, toStringz(name));
 	}
 
+	/++
+	Gets the index to which an attribute should be bound
+	+/
 	int getAttribLocation(const(char)[] name) {
 		//To do: remove?
 		use();
@@ -124,9 +144,9 @@ class ShaderProgram {
 	}
 
 	/++
-	To do: take shaders rather than a ShaderGroup?
+	Finds or creates a shader program for the given ShaderGroup
 	+/
-	static ShadeType getProgram(ShadeType = DGEShaderProgram)(ShaderGroup group) {
+	static ShadeType getProgram(ShadeType = DGEShaderProgram)(ShaderGroup group...) {
 		auto program = programs.get(group, null);
 		if(!program) {
 			program = new ShadeType(group);
@@ -170,24 +190,29 @@ class ShaderProgram {
 A shader program that includes DGE information
 +/
 class DGEShaderProgram: ShaderProgram {
+	///
 	this(VertexShader vs, FragmentShader fs, GeometryShader gs = null) {
 		super(vs, fs, gs);
 		calculateData();
 	}
 
+	///
 	this(ShaderGroup group) {
 		super(group);
 		calculateData();
 	}
 
+	///
 	@property MaterialUniformLocations matUniforms() {
 		return _matUniforms;
 	}
 
+	///
 	@property VertexUniformLocations vUniforms() {
 		return _vUniforms;
 	}
 
+	///
 	@property VertexAttributeLocations vAttributes() {
 		return _vAttributes;
 	}
@@ -204,13 +229,24 @@ class DGEShaderProgram: ShaderProgram {
 	VertexAttributeLocations _vAttributes;
 }
 
+/++
+A group of shaders that go into a program
++/
 struct ShaderGroup {
+	///
 	VertexShader vs;
+	///
 	FragmentShader fs;
+	/++
+	Optional
+	+/
 	GeometryShader gs;
 }
 
-class Shader {
+/++
+Abstract base class for shaders
++/
+abstract class Shader {
 	this(const(char)[] shader, GLenum type) {
 		shaderId = glCreateShader(type);
 		const(char)* ptr = shader.ptr;

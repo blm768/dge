@@ -28,7 +28,7 @@ static T load(T)(const char[] filename, const char[][] path = [getcwd()]) {
 	}
 	
 	foreach(const char[] s; path) {
-		string fullName = absolutePath(buildPath(s, filename));
+		string fullName = buildNormalizedPath(s, filename);
 		if(exists(fullName)) {
 			return loadResource(fullName);
 		}
@@ -38,5 +38,3 @@ static T load(T)(const char[] filename, const char[][] path = [getcwd()]) {
 	throw new ResourceError(filename);
 }
 
-//Provide curdir to importers.
-alias std.path.curdir curdir;

@@ -30,12 +30,11 @@ in vec2 fragTexCoord;
 
 //To do: figure out how to handle material's ambient color.
 //To do: remove conditionals?
-//To do:
 vec3 lighting(const Light light, vec3 color) {
 	//Is this a directional (sun) light?
 	if(light.spotCutoff <= 0.0) {
 		return light.diffuse.rgb * max(0.0, dot(fragViewNormal, (view * -vec4(light.direction, 0.0)).rgb ));
-	} //else
+	}
 
 	vec3 fragmentToLight = (view * vec4(light.position, 1.0) - fragViewPosition).xyz;
 	float distSquared = dot(fragmentToLight, fragmentToLight);
@@ -78,10 +77,9 @@ void main() {
 		color *= texture(surface, fragTexCoord);
 	}
 	//To do: optimize conversions.
-	fragColor = vec4(0, 0, 0, 1);
+	fragColor = vec4(0, 0, 0, color.a);
 	for(uint i = 0; i < numLights; ++i) {
 		fragColor.rgb += lighting(lights[i], color.rgb), diffuse.a;
 	}
 	fragColor.rgb += emission.rgb;
-	fragColor.a = color.a;
 }

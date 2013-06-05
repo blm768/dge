@@ -7,7 +7,6 @@ import std.string;
 template readEdc(string filename, alias string[] params = cast(string[])[]) {
 	mixin("string readEdc(" ~ params.join(", ") ~ ") {
 	" ~ EdcParser(import(filename)).codeText ~ "
-	writeln(`" ~ filename ~ "`);
 	}");
 }
 

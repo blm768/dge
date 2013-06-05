@@ -119,7 +119,7 @@ class Mesh {
 			elementArray.setData(_faces);
 		}
 
-		//To do: encapsulate
+		//To do: encapsulate?
 		Material material;
 
 		private:
@@ -161,11 +161,15 @@ struct Face {
 /--Functions to generate meshes--/
 /-------------------------------+/
 
-Mesh rectangle(GLfloat w, GLfloat h) {
+Mesh rectangle(GLfloat w, GLfloat h, Material mat = null) {
+	if(mat is null) {
+		mat = new Material;
+		mat.diffuse = Color(1, 1, 1, 1);
+	}
 	Normal[] normals;
 
 	Mesh m = new Mesh;
-	m.faceGroups ~= m.new Mesh.FaceGroup;
+	m.faceGroups ~= m.new Mesh.FaceGroup(mat);
 	Mesh.FaceGroup* fg = &m.faceGroups[0];
 	m.vertices = [Vertex(w / 2.0, h / 2.0, 0), Vertex(w / 2.0, -h / 2.0, 0), Vertex(-w / 2.0, -h / 2.0, 0), Vertex(-w / 2.0, h / 2.0, 0)];
 	for(uint i = 0; i < 4; ++i) {
@@ -175,8 +179,6 @@ Mesh rectangle(GLfloat w, GLfloat h) {
 	fg.faces = [Face([2, 1, 0]), Face([0, 3, 2])];
 
 	m.texCoords = [TexCoord2(1, 0), TexCoord2(1, 1), TexCoord2(0, 1), TexCoord2(0, 0)];
-
-	fg.material.diffuse = fg.material.specular = Color(1, 1, 1, 1);
 
 	return m;
 }
