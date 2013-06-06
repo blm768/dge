@@ -74,7 +74,9 @@ struct Vector3 {
 	}
 
 	void opOpAssign(string op)(Vector3 other) pure {
-		mixin("values[] " ~ op ~ "= other.values[];");
+		foreach(size_t i; 0 .. 3) {
+			mixin("values[i] " ~ op ~ "= other.values[i];");
+		}
 	}
 
 	Vector3 opBinary(string op)(Vector3 other) pure const {
@@ -146,8 +148,10 @@ struct Plane {
 
 float dot(Vector3 a, Vector3 b) pure {
 	Vector3 result = a;
-	result.values[] *= b.values[];
-	float f = 0;
+	foreach(size_t i; 0 .. 3) {
+		result.values[i] *= b.values[i];
+	}
+	float f = 0.0;
 	foreach(float fv; result.values) {
 		f += fv;
 	}
