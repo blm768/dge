@@ -16,3 +16,4 @@ void main() {
 	fragViewNormal = vec3(view * model * vec4(normal, 0.0));
 	fragTexCoord = texCoord;
 }
+

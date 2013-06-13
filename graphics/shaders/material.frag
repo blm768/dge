@@ -1,5 +1,3 @@
-<# import dge.config; #>
-
 #version 330
 
 uniform mat4 view, projection;
@@ -21,8 +19,8 @@ struct Light {
 	float spotExponent;
 };
 
-uniform int numLights;
-uniform Light[<#= maxLightsPerObject #>] lights;
+uniform uint numLights;
+uniform Light[maxLightsPerObject] lights;
 
 in vec4 fragViewPosition;
 in vec3 fragViewNormal;
@@ -78,8 +76,10 @@ void main() {
 	}
 	//To do: optimize conversions.
 	fragColor = vec4(0, 0, 0, color.a);
+	//To do: eliminate warning?
 	for(uint i = 0; i < numLights; ++i) {
 		fragColor.rgb += lighting(lights[i], color.rgb), diffuse.a;
 	}
 	fragColor.rgb += emission.rgb;
 }
+

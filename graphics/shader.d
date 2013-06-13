@@ -3,6 +3,7 @@ module dge.graphics.shader;
 import derelict.opengl3.gl3;
 
 import std.conv;
+import std.file;
 import std.stdio;
 import std.string;
 
@@ -156,6 +157,7 @@ class ShaderProgram {
 	private:
 	void prepareProgram() {
 		programId = glCreateProgram();
+		writeln(shaders);
 		glAttachShader(programId, shaders.vs.shaderId);
 		glAttachShader(programId, shaders.fs.shaderId);
 		if(shaders.gs) {
@@ -228,6 +230,10 @@ class DGEShaderProgram: ShaderProgram {
 	VertexAttributeLocations _vAttributes;
 }
 
+struct DgeShaderConfig {
+	size_t maxLightsPerObject;
+}
+
 /++
 A group of shaders that go into a program
 +/
@@ -246,11 +252,40 @@ struct ShaderGroup {
 Abstract base class for shaders
 +/
 abstract class Shader {
-	this(const(char)[] shader, GLenum type) {
+	this()(const(char)[] shader, GLenum type) {
 		shaderId = glCreateShader(type);
 		const(char)* ptr = shader.ptr;
 		int len = cast(int)shader.length;
 		glShaderSource(shaderId, 1, &ptr, &len);
+		compile();
+	}
+
+	this()(const(char)[][] shaderStrings, GLenum type) {
+		const(char)*[] shaderPtrs;
+		int[] shaderLengths;	
+		shaderPtrs.length = shaderStrings.length;
+		shaderLengths.length = shaderStrings.length;
+		foreach(i, s; shaderStrings) {
+			shaderPtrs[i] = s.ptr;
+			shaderLengths[i] = cast(int)s.len;
+		}
+		glShaderSource(shaderId, shaderStrings.length, shaderPtrs.ptr, shaderLengths.ptr);
+	}
+
+	this(T)(const(char)[] shader, GLenum type, T config) if(__traits(isSomeStruct, T)) {
+		string configText;
+		foreach(member; __traits(allMembers, config)) {
+			configText ~= "#define " ~ member ~ " " ~ __traits(getMember, config, member).to!string() ~ "\n";
+		}
+		this([configText, shader], type);
+	}
+
+	~this() {
+		glDeleteShader(shaderId);
+	}
+
+	protected:
+	void compile() {
 		glCompileShader(shaderId);
 		int compiled;
 		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compiled);
@@ -263,10 +298,6 @@ abstract class Shader {
 			glGetShaderInfoLog(shaderId, msg_len, &msg_len, msg.ptr);
 			throw new Error("Unable to compile shader: " ~ msg.idup);
 		}
-	}
-
-	~this() {
-		glDeleteShader(shaderId);
 	}
 
 	private:
@@ -298,7 +329,7 @@ class FragmentShader: Shader {
 @property VertexShader defaultVertexShader() {
 	static VertexShader shader;
 	if(!shader) {
-		//shader = new VertexShader(defaultVertexShaderText());
+		shader = new VertexShader(readText("dge/graphics/shaders/default.vert"));
 	}
 	return shader;
 }
@@ -328,7 +359,7 @@ void main() {
 @property FragmentShader materialFragmentShader() {
 	static FragmentShader shader;
 	if(!shader) {
-		//shader = new FragmentShader(materialFragmentShaderText());
+		shader = new FragmentShader(readText("dge/graphics/shaders/material.frag"));
 	}
 	return shader;
 }
