@@ -13,11 +13,9 @@ import dge.graphics.scene;
 
 /++
 An OpenGL window
-
-To do: remove default window size?
 +/
 class Window {
-	this(uint width = 800, uint height = 600) {
+	this(uint width, uint height) {
 		_width = width;
 		_height = height;
 
@@ -37,13 +35,13 @@ class Window {
 		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilBufferSize);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-		window = SDL_CreateWindow(null, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+		_window = SDL_CreateWindow(null, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                             width, height, SDL_WINDOW_OPENGL);
-        if(!window) {
+        if(!_window) {
             throw new Error("Unable to create SDL window: " ~ to!string(SDL_GetError()));
 		}
 
-        context = SDL_GL_CreateContext(window);
+        context = SDL_GL_CreateContext(_window);
 		if(!context) {
 			throw new Error("Unable to create OpenGL " ~ to!string(glMajorVersion) ~
 				"." ~ to!string(glMinorVersion) ~ " or higher context. Please try updating your graphics drivers.");
@@ -64,7 +62,14 @@ class Window {
 	Make this window's context the current OpenGL context
 	+/
 	void makeCurrent() {
-		SDL_GL_MakeCurrent(window, &context);
+		SDL_GL_MakeCurrent(_window, &context);
+	}
+
+	void close() {
+		if(_window) {
+			SDL_DestroyWindow(_window);
+		}
+		_window = null;
 	}
 
 	/++
@@ -80,7 +85,7 @@ class Window {
 	Swaps the window's buffers
 	+/
 	void present() {
-        SDL_GL_SwapWindow(window);
+        SDL_GL_SwapWindow(_window);
 	}
 
 	///
@@ -96,6 +101,11 @@ class Window {
 	///
 	Scene scene;
 
+	~this() {
+		//To do: consider the case if SDL is quit before this destructor is called.
+		close();
+	}
+
 	private:
 	void onResize() {
 		//To do: camera adjustment?
@@ -104,7 +114,8 @@ class Window {
 	}
 
 	uint _width, _height;
-	SDL_Window* window;
+	SDL_Window* _window;
 	SDL_GLContext context;
 	SDL_RendererInfo info;
 }
+

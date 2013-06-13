@@ -51,23 +51,12 @@ Unit tests, etc. for all files/functions that need them
 +/
 class Game {
 	public:
-	this() {
+	this(Window w) {
+		window = w;
 
-		frameDuration = TickDuration.from!"msecs"(1000/30);
+		frameDuration  = TickDuration.from!"msecs"(1000/30);
 
-		//Load Derelict libraries
-		DerelictSDL2.load();
-		DerelictSDL2Image.load();
-		//DerelictSDLMixer.load();
-		DerelictGL3.load();
-
-		//Set up SDL, etc:
-		if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-			throw new Error("Unable to initialize SDL:" ~ to!string(SDL_GetError()));
-		}
-
-		window = new Window;
-
+		//To do: move out of the constructor?
 		GLVersion glVersion = DerelictGL3.reload();
 		if(glVersion < glRequiredVersion) {
 			throw new Error("Unable to create OpenGL " ~ to!string(glMajorVersion) ~
@@ -86,6 +75,19 @@ class Game {
 		}+/
 
 		scene = new Scene();
+	}
+
+	static void initLibraries() {
+		//Load Derelict libraries
+		DerelictSDL2.load();
+		DerelictSDL2Image.load();
+		//DerelictSDLMixer.load();
+	
+		//Set up SDL, etc:
+		if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+			throw new Error("Unable to initialize SDL:" ~ to!string(SDL_GetError()));
+		}
+		DerelictGL3.load();
 
 		//Set up input
 		SDL_JoystickEventState(SDL_ENABLE);
@@ -155,10 +157,10 @@ class Game {
 	}
 
 	Scene scene;
+	Window window;
+	TickDuration frameDuration;
 
 	private:
 	bool running;
 	StopWatch frameTimer;
-	TickDuration frameDuration;
-	Window window;
 }

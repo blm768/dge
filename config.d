@@ -7,6 +7,8 @@ import std.conv;
 
 import derelict.opengl3.gl3;
 
+import dge.graphics.material;
+
 enum {
 	//Determines whether to use precompiled Derelict libraries instead of recompiling each time; affects pragma(lib) directives
 	//To do: remove?
@@ -26,6 +28,13 @@ enum {
 	size_t maxLightsPerObject = 8,
 	size_t maxMirrorReflections = 1,
 }
+
+/++
+The default parameters for new material shaders
+
+May be modified by the user
++/
+MaterialShaderConfig defaultMaterialConfig;
 
 template DerelictGLVersion(uint major, uint minor) {
 	enum DerelictGLVersion = mixin("GLVersion.GL" ~ to!string(major) ~ to!string(minor));

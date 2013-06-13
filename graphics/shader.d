@@ -6,6 +6,7 @@ import std.conv;
 import std.file;
 import std.stdio;
 import std.string;
+import std.traits;
 
 import dge.config;
 public import dge.graphics.material;
@@ -157,7 +158,6 @@ class ShaderProgram {
 	private:
 	void prepareProgram() {
 		programId = glCreateProgram();
-		writeln(shaders);
 		glAttachShader(programId, shaders.vs.shaderId);
 		glAttachShader(programId, shaders.fs.shaderId);
 		if(shaders.gs) {
@@ -189,6 +189,9 @@ class ShaderProgram {
 
 /++
 A shader program that includes DGE information
+
+
+To do: rename.
 +/
 class DGEShaderProgram: ShaderProgram {
 	///
@@ -230,10 +233,6 @@ class DGEShaderProgram: ShaderProgram {
 	VertexAttributeLocations _vAttributes;
 }
 
-struct DgeShaderConfig {
-	size_t maxLightsPerObject;
-}
-
 /++
 A group of shaders that go into a program
 +/
@@ -267,14 +266,14 @@ abstract class Shader {
 		shaderLengths.length = shaderStrings.length;
 		foreach(i, s; shaderStrings) {
 			shaderPtrs[i] = s.ptr;
-			shaderLengths[i] = cast(int)s.len;
+			shaderLengths[i] = cast(int)s.length;
 		}
 		glShaderSource(shaderId, shaderStrings.length, shaderPtrs.ptr, shaderLengths.ptr);
 	}
 
-	this(T)(const(char)[] shader, GLenum type, T config) if(__traits(isSomeStruct, T)) {
+	this(T)(const(char)[] shader, GLenum type, T config) {
 		string configText;
-		foreach(member; __traits(allMembers, config)) {
+		foreach(member; __traits(allMembers, typeof(config))) {
 			configText ~= "#define " ~ member ~ " " ~ __traits(getMember, config, member).to!string() ~ "\n";
 		}
 		this([configText, shader], type);
@@ -308,20 +307,32 @@ abstract class Shader {
 A vertex shader
 +/
 class VertexShader: Shader {
-	this(const(char)[] shader) {
+	this()(const(char)[] shader) {
 		super(shader, GL_VERTEX_SHADER);
+	}
+
+	this(T)(const(char)[] shader, T config) {
+		super(shader, GL_VERTEX_SHADER, config);
 	}
 }
 
 class GeometryShader: Shader {
-	this(const(char)[] shader) {
+	this()(const(char)[] shader) {
 		super(shader, GL_GEOMETRY_SHADER);
+	}
+
+	this(T)(const(char)[] shader, T config) {
+		super(shader, GL_GEOMETRY_SHADER, config);
 	}
 }
 
 class FragmentShader: Shader {
-	this(const(char)[] shader) {
+	this()(const(char)[] shader) {
 		super(shader, GL_FRAGMENT_SHADER);
+	}
+
+	this(T)(const(char)[] shader, T config) {
+		super(shader, GL_FRAGMENT_SHADER, config);
 	}
 }
 
@@ -352,14 +363,6 @@ void main() {
 	static GeometryShader shader;
 	if(!shader) {
 		shader = new GeometryShader(defaultGeometryShaderText);
-	}
-	return shader;
-}
-
-@property FragmentShader materialFragmentShader() {
-	static FragmentShader shader;
-	if(!shader) {
-		shader = new FragmentShader(readText("dge/graphics/shaders/material.frag"));
 	}
 	return shader;
 }
@@ -422,3 +425,4 @@ struct VertexAttributeLocations {
 	}
 	int position, normal, texCoord;
 }
+

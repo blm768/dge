@@ -73,7 +73,7 @@ class Material {
 	public:
 	this() {
 		_shaders.vs = defaultVertexShader;
-		_shaders.fs = materialFragmentShader;
+		_shaders.fs = defaultFragmentShader;
 		//_shaders.gs = defaultGeometryShader;
 		setProgram();
 	}
@@ -160,6 +160,14 @@ class Material {
 	//To do: figure out how this will work w/ shaders.
 	bool transparent;
 
+	static @property FragmentShader defaultFragmentShader() {
+		static FragmentShader shader;
+		if(!shader) {
+			shader = new FragmentShader(readText("dge/graphics/shaders/material.frag"), defaultMaterialConfig);
+		}
+		return shader;
+	}
+
 	private:
 	void setProgram() {
 		_program = ShaderProgram.getProgram!DGEShaderProgram(_shaders);
@@ -169,6 +177,10 @@ class Material {
 
 	ShaderGroup _shaders;
 	DGEShaderProgram _program;
+}
+
+struct MaterialShaderConfig {
+	alias dge.config.maxLightsPerObject maxLightsPerObject;
 }
 
 /+
