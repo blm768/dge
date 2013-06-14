@@ -268,7 +268,7 @@ abstract class Shader {
 			shaderPtrs[i] = s.ptr;
 			shaderLengths[i] = cast(int)s.length;
 		}
-		glShaderSource(shaderId, shaderStrings.length, shaderPtrs.ptr, shaderLengths.ptr);
+		glShaderSource(shaderId, cast(int)shaderStrings.length, shaderPtrs.ptr, shaderLengths.ptr);
 	}
 
 	this(T)(const(char)[] shader, GLenum type, T config) {
