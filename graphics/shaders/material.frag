@@ -1,5 +1,3 @@
-#version 330
-
 uniform mat4 view, projection;
 
 uniform vec4 diffuse, specular, emission;

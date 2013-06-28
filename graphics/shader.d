@@ -16,18 +16,10 @@ import dge.math;
 Represents a shader program
 +/
 class ShaderProgram {
-	///
-	this(VertexShader vs, FragmentShader fs, GeometryShader gs = null) {
-		shaders.vs = vs;
-		shaders.gs = gs;
-		shaders.fs = fs;
-		prepareProgram();
-	}
-
 	/++
 	To do: make sure that the ShaderGroup is valid.
 	+/
-	this(ShaderGroup group) {
+	this(ShaderGroup group ...) {
 		shaders = group;
 		prepareProgram();
 	}
@@ -235,24 +227,33 @@ abstract class Shader {
 		compile();
 	}
 
-	this()(const(char)[][] shaderStrings, GLenum type) {
+	/++
+	Currently seems to be broken; do not use.
+
+	To do: figure out why only the first string is getting picked up by glShaderSource.
+	+/
+	deprecated this()(const(char)[][] shaderStrings, GLenum type) {
+		shaderId = glCreateShader(type);
 		const(char)*[] shaderPtrs;
-		int[] shaderLengths;	
+		int[] shaderLengths;
 		shaderPtrs.length = shaderStrings.length;
 		shaderLengths.length = shaderStrings.length;
 		foreach(i, s; shaderStrings) {
 			shaderPtrs[i] = s.ptr;
 			shaderLengths[i] = cast(int)s.length;
 		}
+		writeln(shaderPtrs);
+		writeln(shaderLengths);
 		glShaderSource(shaderId, cast(int)shaderStrings.length, shaderPtrs.ptr, shaderLengths.ptr);
+		compile();
 	}
 
 	this(T)(const(char)[] shader, GLenum type, T config) {
-		string configText;
+		string configText = "#version " ~ glslVersion ~ "\n\n";
 		foreach(member; __traits(allMembers, typeof(config))) {
 			configText ~= "#define " ~ member ~ " " ~ __traits(getMember, config, member).to!string() ~ "\n";
 		}
-		this([configText, shader], type);
+		this(configText ~ shader, type);
 	}
 
 	~this() {

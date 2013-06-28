@@ -17,6 +17,8 @@ enum {
 	uint glMajorVersion = 3,
 	uint glMinorVersion = 2,
 
+	string glslVersion = "330",
+
 	bool useBufferAlpha = false,
 	size_t depthBufferSize = 24,
 	size_t stencilBufferSize = 8,

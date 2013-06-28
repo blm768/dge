@@ -93,25 +93,23 @@ class Material {
 	/++
 	Prepare to draw using this material
 
-	The caller must bind the shader and its values.
-
-	To do: make use() handle some shader stuff?
+	program.use() must be called first.
 	+/
-	void use(ShaderProgram program) {
+	void use() {
 		if(transparent) {
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
-		program.setUniform(program.matUniforms.diffuse, diffuse);
-		program.setUniform(program.matUniforms.emission, emission);
-		program.setUniform(program.matUniforms.specular, specular);
-		program.setUniform(program.matUniforms.shininess, shininess);
+		_program.setUniform(program.matUniforms.diffuse, diffuse);
+		_program.setUniform(program.matUniforms.emission, emission);
+		_program.setUniform(program.matUniforms.specular, specular);
+		_program.setUniform(program.matUniforms.shininess, shininess);
 		if(texture) {
 			texture.bind(0);
-			program.setUniform(program.matUniforms.useTexture, true);
-			program.setUniform(program.matUniforms.surface, 0);
+			_program.setUniform(program.matUniforms.useTexture, true);
+			_program.setUniform(program.matUniforms.surface, 0);
 		} else {
-			program.setUniform(program.matUniforms.useTexture, false);
+			_program.setUniform(program.matUniforms.useTexture, false);
 		}
 	}
 

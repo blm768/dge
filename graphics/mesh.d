@@ -86,7 +86,7 @@ class Mesh {
 			program.setUniform(program.vUniforms.view, scene.activeCamera.view);
 			program.setUniform(program.vUniforms.projection, scene.activeCamera.projection);
 
-			material.use(program);
+			material.use();
 			LightNode.setProgramLights(program, scene);
 
 			vao.bind();
