@@ -34,14 +34,6 @@ version(linux) {
 	pragma(lib, "dl");
 }
 
-//To do: move this out of here.
-immutable uint screenWidth = 800;
-immutable uint screenHeight = 600;
-immutable GLfloat aspectRatio = cast(float)screenWidth / cast(float)screenHeight;
-immutable GLfloat near = 0.1;
-immutable GLfloat far = 1000;
-immutable GLfloat angle = PI / 4;
-
 /++
 Encapsulates rendering, event handling, etc. for the game
 
