@@ -413,6 +413,7 @@ class TagCompound: PayloadTag!(Tag[][string]) {
 class NBMFile {
 	this(const(char)[] filename, const(char[])[] path = [getcwd()]) {
 		searchPath = path;
+		filename = locate(filename, path);
 
 		auto file = new NBTFile(filename);
 
@@ -579,7 +580,7 @@ class NBMFile {
 		//To do: multitexturing
 		auto tagString = cast(TagString)tagMat.get("Texture", TagType.String);
 		if(tagString) {
-			mat.texture = load!Texture2D(tagString.value, searchPath);
+			mat.texture = new Texture2D(locate(tagString.value, searchPath));
 		}
 
 		tagString = cast(TagString)tagMat.get("Fragment shader", TagType.String);
