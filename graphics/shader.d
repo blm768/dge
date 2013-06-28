@@ -14,8 +14,6 @@ import dge.math;
 
 /++
 Represents a shader program
-
-To do: error checking?
 +/
 class ShaderProgram {
 	///
@@ -113,6 +111,21 @@ class ShaderProgram {
 		}
 	}
 
+	///
+	@property MaterialUniformLocations matUniforms() {
+		return _matUniforms;
+	}
+
+	///
+	@property VertexUniformLocations vUniforms() {
+		return _vUniforms;
+	}
+
+	///
+	@property VertexAttributeLocations vAttributes() {
+		return _vAttributes;
+	}
+
 	/++
 	Finishes using the program
 	+/
@@ -147,15 +160,20 @@ class ShaderProgram {
 	/++
 	Finds or creates a shader program for the given ShaderGroup
 	+/
-	static ShadeType getProgram(ShadeType = DGEShaderProgram)(ShaderGroup group...) {
+	static ShaderProgram getProgram(ShaderGroup group...) {
 		auto program = programs.get(group, null);
 		if(!program) {
-			program = new ShadeType(group);
+			program = new ShaderProgram(group);
 		}
-		return cast(ShadeType)program;
+		return program;
+	}
+	private:
+	void getDataLocations() {
+		_matUniforms = MaterialUniformLocations(this);
+		_vUniforms = VertexUniformLocations(this);
+		_vAttributes = VertexAttributeLocations(this);
 	}
 
-	private:
 	void prepareProgram() {
 		programId = glCreateProgram();
 		glAttachShader(programId, shaders.vs.shaderId);
@@ -176,61 +194,19 @@ class ShaderProgram {
 			throw new Error("Unable to link shader program: " ~ msg.idup);
 		}
 
+		getDataLocations();
+
 		programs[shaders] = this;
-	}
-
-	static ShaderProgram[ShaderGroup] programs;
-
-	ShaderGroup shaders;
-	uint programId;
-
-	static AssociativeArray!(ShaderGroup, ShaderProgram) hack;
-}
-
-/++
-A shader program that includes DGE information
-
-
-To do: rename.
-+/
-class DGEShaderProgram: ShaderProgram {
-	///
-	this(VertexShader vs, FragmentShader fs, GeometryShader gs = null) {
-		super(vs, fs, gs);
-		calculateData();
-	}
-
-	///
-	this(ShaderGroup group) {
-		super(group);
-		calculateData();
-	}
-
-	///
-	@property MaterialUniformLocations matUniforms() {
-		return _matUniforms;
-	}
-
-	///
-	@property VertexUniformLocations vUniforms() {
-		return _vUniforms;
-	}
-
-	///
-	@property VertexAttributeLocations vAttributes() {
-		return _vAttributes;
-	}
-
-	private:
-	void calculateData() {
-		_matUniforms = MaterialUniformLocations(this);
-		_vUniforms = VertexUniformLocations(this);
-		_vAttributes = VertexAttributeLocations(this);
 	}
 
 	MaterialUniformLocations _matUniforms;
 	VertexUniformLocations _vUniforms;
 	VertexAttributeLocations _vAttributes;
+
+	ShaderGroup shaders;
+	uint programId;
+
+	static ShaderProgram[ShaderGroup] programs;
 }
 
 /++

@@ -97,7 +97,7 @@ class Material {
 
 	To do: make use() handle some shader stuff?
 	+/
-	void use(DGEShaderProgram program) {
+	void use(ShaderProgram program) {
 		if(transparent) {
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -137,7 +137,7 @@ class Material {
 		return _shaders.gs;
 	}
 
-	@property DGEShaderProgram program() {
+	@property ShaderProgram program() {
 		return _program;
 	}
 
@@ -170,13 +170,13 @@ class Material {
 
 	private:
 	void setProgram() {
-		_program = ShaderProgram.getProgram!DGEShaderProgram(_shaders);
+		_program = ShaderProgram.getProgram(_shaders);
 	}
 
 	Texture2D _texture;
 
 	ShaderGroup _shaders;
-	DGEShaderProgram _program;
+	ShaderProgram _program;
 }
 
 struct MaterialShaderConfig {

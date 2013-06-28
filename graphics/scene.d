@@ -478,7 +478,7 @@ class LightNode: Node {
 
 	To do: move to the program?
 	+/
-	static void setProgramLights(DGEShaderProgram program, Scene scene) {
+	static void setProgramLights(ShaderProgram program, Scene scene) {
 		size_t i = 0;
 		foreach(LightNode light; scene.lights) {
 			setProgramLight(program, light, i);
@@ -490,7 +490,7 @@ class LightNode: Node {
 	}
 
 	//To do: make a normal method? Move to program?
-	static void setProgramLight(DGEShaderProgram program, LightNode light, size_t num) {
+	static void setProgramLight(ShaderProgram program, LightNode light, size_t num) {
 		program.setUniform(program.matUniforms.lights[num].position, light.worldPosition);
 		program.setUniform(program.matUniforms.lights[num].diffuse, light.diffuse);
 		program.setUniform(program.matUniforms.lights[num].ambient, light.ambient);
