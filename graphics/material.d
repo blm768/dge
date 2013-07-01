@@ -174,6 +174,7 @@ class Material {
 	Texture2D _texture;
 
 	ShaderGroup _shaders;
+	MaterialShaderConfig _config;
 	ShaderProgram _program;
 }
 

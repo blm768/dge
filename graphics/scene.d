@@ -486,7 +486,7 @@ class LightNode: Node {
 			if(i >= maxLightsPerObject)
 				break;
 		}
-		program.setUniform(program.matUniforms.numLights, cast(int)i);
+		program.setUniform(program.matUniforms.numLights, cast(GLuint)i);
 	}
 
 	//To do: make a normal method? Move to program?

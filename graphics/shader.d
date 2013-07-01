@@ -96,6 +96,14 @@ class ShaderProgram {
 	}
 
 	///ditto
+	void setUniform(int uniform, uint value) {
+		if(uniform > -1) {
+			use();
+			glUniform1ui(uniform, value);
+		}
+	}
+
+	///ditto
 	void setUniform(int uniform, bool value) {
 		if(uniform > -1) {
 			use();
