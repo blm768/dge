@@ -19,6 +19,12 @@ class Window {
 		_width = width;
 		_height = height;
 
+		scene = new Scene;
+	}
+
+	void open() in {
+		assert(!isOpen, "Window must be closed before reopening");	
+	} body {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glMajorVersion);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glMinorVersion);
 
@@ -53,9 +59,9 @@ class Window {
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 
-		scene = new Scene;
-
 		onResize();
+		
+		_isOpen = true;
 	}
 
 	/++
@@ -75,6 +81,7 @@ class Window {
 	/++
 	+/
 	void render() in {
+		assert(_isOpen, "Window is not open");
 		assert(scene, "Unable to render window with no scene");
 	} body {
 		scene.render();
@@ -97,6 +104,10 @@ class Window {
 	@property uint height() {
 		return _height;
 	}
+	
+	@property bool isOpen() {
+		return _isOpen;
+	}
 
 	///
 	Scene scene;
@@ -114,6 +125,7 @@ class Window {
 	}
 
 	uint _width, _height;
+	bool _isOpen;
 	SDL_Window* _window;
 	SDL_GLContext context;
 	SDL_RendererInfo info;

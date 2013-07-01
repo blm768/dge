@@ -164,3 +164,4 @@ class MirrorPass: RenderPass {
 	///The mirror from which the scene is currently being rendered
 	MirrorNode currentMirror;
 }
+
