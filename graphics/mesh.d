@@ -79,6 +79,11 @@ class Mesh {
 			this(mat);
 		}
 
+		/++
+		Draws the FaceGroup
+
+		TODO: make useTransparency work.
+		+/
 		void draw(Scene scene, TransformMatrix model, bool useTransparency = false) {
 			auto program = material.program;
 			program.use();

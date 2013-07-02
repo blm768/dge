@@ -63,25 +63,26 @@ class MirrorNode: Node {
 		//Render the reflection:
 		
 		//To do: set up the clipping plane.
-		//Render the mirror to the stencil buffer and clear the depth buffer to 1.0 under it:
-		glColorMask(0, 0, 0, 0);
+		//Render the mirror to the stencil buffer and set the depth buffer to 1.0 under it:
+		//glColorMask(0, 0, 0, 0);
 		if(pass.depth == 0) {
 			//Set the mirror bits to 0.
 			//To do: fix.
-			glStencilMask(stencilMaskAll);
+			glStencilMask(GLuint.max);
 			glClearStencil(0);
 			glClear(GL_STENCIL_BUFFER_BIT);
-			glStencilMask(stencilMaskAll);
 			glStencilFunc(GL_ALWAYS, 0, 0);
 		} else {
-			glStencilFunc(GL_EQUAL, cast(GLint)pass.depth, stencilMaskAll);
+			glStencilFunc(GL_EQUAL, cast(GLint)pass.depth, GLuint.max);
 		}
-		glDepthRange(1.0, 1.0);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+		glDepthRange(1.0, 1.0);
+		glDisable(GL_DEPTH_TEST);
 		//To do: how to place this in the optimal location for the pipeline?
 		mesh.draw(scene, worldTransform, false);
-		glColorMask(1, 1, 1, 1);
+		glEnable(GL_DEPTH_TEST);
 		glDepthRange(0.0, 1.0);
+		glColorMask(1, 1, 1, 1);
 
 		//Push data.
 		bool usePreTransform = camera.usePreTransform;
@@ -98,7 +99,7 @@ class MirrorNode: Node {
 		++pass.depth;
 		
 		//Render.
-		glStencilFunc(GL_EQUAL, cast(GLint)pass.depth, stencilMaskAll);
+		glStencilFunc(GL_EQUAL, cast(GLint)pass.depth, GLuint.max);
 		scene.activeCamera.renderSubPass();
 		
 		//Pop data.
@@ -114,7 +115,7 @@ class MirrorNode: Node {
 		if(true || pass.depth == 0) {
 			glStencilFunc(GL_ALWAYS, 0, 0);
 		} else {
-			glStencilFunc(GL_EQUAL, cast(GLint)pass.depth, stencilMaskAll);
+			glStencilFunc(GL_EQUAL, cast(GLint)pass.depth, GLuint.max);
 		}
 		glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
 		mesh.draw(scene, worldTransform, true);

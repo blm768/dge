@@ -37,8 +37,8 @@ class Window {
 		static if(useBufferAlpha) {
 			SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,   8);
 		}
-		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   depthBufferSize);
-		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilBufferSize);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   depthBits);
+		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilBits);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 		_window = SDL_CreateWindow(null, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -116,6 +116,10 @@ class Window {
 		//To do: consider the case if SDL is quit before this destructor is called.
 		close();
 	}
+
+	//TODO: more encapsulation?
+	size_t depthBits = defaultDepthBits;
+	size_t stencilBits = defaultStencilBits;
 
 	private:
 	void onResize() {
