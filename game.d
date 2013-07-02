@@ -19,17 +19,6 @@ public import dge.input.mapping;
 public import dge.sound;
 public import dge.window;
 
-version(Windows) {
-	static if(useDerelictLibs) {
-		pragma(lib, `lib\DerelictUtil.lib`);
-		pragma(lib, `lib\DerelictSDL.lib`);
-		pragma(lib, `lib\DerelictSDLimage.lib`);
-		pragma(lib, `lib\DerelictSDLMixer.lib`);
-		pragma(lib, `lib\DerelictGL.lib`);
-		pragma(lib, `lib\DerelictGLU.lib`);
-	}
-}
-
 version(linux) {
 	pragma(lib, "dl");
 }
