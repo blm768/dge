@@ -37,8 +37,8 @@ class Window {
 		static if(useBufferAlpha) {
 			SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,   8);
 		}
-		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   depthBits);
-		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilBits);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   cast(int)depthBits);
+		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, cast(int)stencilBits);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 		_window = SDL_CreateWindow(null, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -118,8 +118,8 @@ class Window {
 	}
 
 	//TODO: more encapsulation?
-	size_t depthBits = defaultDepthBits;
-	size_t stencilBits = defaultStencilBits;
+	uint depthBits = defaultDepthBits;
+	uint stencilBits = defaultStencilBits;
 
 	private:
 	void onResize() {
