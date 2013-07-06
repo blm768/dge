@@ -66,15 +66,18 @@ struct Color {
 	alias a alpha;
 }
 
+enum BlendType {
+	none, mix, add, multiply
+}
+
 /++
-Standard, color-based material
+Standard material
 +/
 class Material {
 	public:
 	this() {
 		_shaders.vs = defaultVertexShader;
 		_shaders.fs = defaultFragmentShader;
-		//_shaders.gs = defaultGeometryShader;
 		setProgram();
 	}
 
@@ -89,16 +92,28 @@ class Material {
 	Color specular;
 	Color emission;
 	GLfloat shininess = 0.0;
+	BlendType blendType;
 
 	/++
 	Prepare to draw using this material
 
 	program.use() must be called first.
 	+/
-	void use() {
-		if(transparent) {
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	final void use() {
+		//To do: support other blend equations?
+		//To do: check if blending is enabled?
+		glBlendEquation(GL_FUNC_ADD);
+		switch(blendType) {
+			case BlendType.mix:
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				break;
+			case BlendType.add:
+				glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ZERO);
+				break;
+			case BlendType.multiply:
+				glBlendFuncSeparate(GL_DST_COLOR, GL_ZERO, GL_ONE, GL_ZERO);
+			default:
+				//Do nothing.
 		}
 		_program.setUniform(program.matUniforms.diffuse, diffuse);
 		_program.setUniform(program.matUniforms.emission, emission);
@@ -155,9 +170,6 @@ class Material {
 		setProgram();+/
 	}
 
-	//To do: figure out how this will work w/ shaders.
-	bool transparent;
-
 	static @property FragmentShader defaultFragmentShader() {
 		static FragmentShader shader;
 		if(!shader) {
@@ -178,8 +190,13 @@ class Material {
 	ShaderProgram _program;
 }
 
+enum ShadeType {
+	none, vertex, fragment
+}
+
 struct MaterialShaderConfig {
 	alias dge.config.maxLightsPerObject maxLightsPerObject;
+	ShadeType shadeType = ShadeType.vertex;
 }
 
 /+
@@ -251,5 +268,5 @@ class Texture2D: Texture {
 	}
 
 	bool transparent;
-
 }
+

@@ -32,7 +32,7 @@ class MirrorNode: Node {
 		
 		//If we're not reflecting, just draw the surface.
 		if(pass.depth == maxMirrorReflections) {
-			mesh.draw(scene, worldTransform, false);
+			mesh.draw(scene, worldTransform);
 			return;
 		}
 
@@ -79,7 +79,7 @@ class MirrorNode: Node {
 		glDepthRange(1.0, 1.0);
 		glDisable(GL_DEPTH_TEST);
 		//To do: how to place this in the optimal location for the pipeline?
-		mesh.draw(scene, worldTransform, false);
+		mesh.draw(scene, worldTransform);
 		glEnable(GL_DEPTH_TEST);
 		glDepthRange(0.0, 1.0);
 		glColorMask(1, 1, 1, 1);
@@ -118,7 +118,9 @@ class MirrorNode: Node {
 			glStencilFunc(GL_EQUAL, cast(GLint)pass.depth, GLuint.max);
 		}
 		glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
-		mesh.draw(scene, worldTransform, true);
+		glEnable(GL_BLEND);
+		mesh.draw(scene, worldTransform);
+		glDisable(GL_BLEND);
 
 		//To do: reset stencil?
 	}

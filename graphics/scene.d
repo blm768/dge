@@ -383,7 +383,7 @@ class MeshNode: Node {
 	}
 
 	override void draw() {
-		mesh.draw(scene, worldTransform, scene.activeCamera.activePass is transparentPass);
+		mesh.draw(scene, worldTransform);
 	}
 
 	override void onAddToScene() {

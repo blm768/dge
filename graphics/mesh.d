@@ -33,7 +33,7 @@ class Mesh {
 	}
 
 	public:
-	void draw(Scene scene, TransformMatrix transform, bool useTransparency = true) {
+	void draw(Scene scene, TransformMatrix transform, Material mat = null) {
 		foreach(FaceGroup fg; faceGroups) {
 			fg.draw(scene, transform);
 		}
@@ -79,40 +79,21 @@ class Mesh {
 			this(mat);
 		}
 
+
 		/++
 		Draws the FaceGroup
 
-		TODO: make useTransparency work.
+		TODO: make useTransparency work?
 		+/
-		void draw(Scene scene, TransformMatrix model, bool useTransparency = false) {
-			auto program = material.program;
-			program.use();
-			program.setUniform(program.vUniforms.model, model);
-			program.setUniform(program.vUniforms.view, scene.activeCamera.view);
-			program.setUniform(program.vUniforms.projection, scene.activeCamera.projection);
-
-			material.use();
-			LightNode.setProgramLights(program, scene);
-
-			vao.bind();
-			//To do: avoid repeating each frame?
-			posVbo.bindToAttribute(program.vAttributes.position);
-			posVbo.enable();
-			normalVbo.bindToAttribute(program.vAttributes.normal);
-			normalVbo.enable();
-			if(texCoords.length > 0) {
-				texCoordVbo.bindToAttribute(program.vAttributes.texCoord);
-				texCoordVbo.enable();
+		void draw(Scene scene, TransformMatrix model, Material mat = null) {
+			if(!mat) {
+				mat = material;
 			}
-			elementArray.bind();
+			prepDraw(scene, model, mat);
 
 			glDrawElements(GL_TRIANGLES, cast(int)faces.length * 3, GL_UNSIGNED_INT, null);
 
-			material.finish();
-
-			posVbo.disable();
-			normalVbo.disable();
-			texCoordVbo.disable();
+			finishDraw(mat);
 		}
 
 		@property const(Face)[] faces() const {
@@ -130,6 +111,37 @@ class Mesh {
 		private:
 		Face[] _faces;
 		ElementArray elementArray;
+
+		void prepDraw(Scene scene, TransformMatrix model, Material mat) {
+			auto program = mat.program;
+			program.use();
+			program.setUniform(program.vUniforms.model, model);
+			program.setUniform(program.vUniforms.view, scene.activeCamera.view);
+			program.setUniform(program.vUniforms.projection, scene.activeCamera.projection);
+
+			mat.use();
+			LightNode.setProgramLights(program, scene);
+
+			vao.bind();
+			//To do: avoid repeating each frame?
+			posVbo.bindToAttribute(program.vAttributes.position);
+			posVbo.enable();
+			normalVbo.bindToAttribute(program.vAttributes.normal);
+			normalVbo.enable();
+			if(texCoords.length > 0) {
+				texCoordVbo.bindToAttribute(program.vAttributes.texCoord);
+				texCoordVbo.enable();
+			}
+			elementArray.bind();
+		}
+
+		void finishDraw(Material mat) {
+			mat.finish();
+
+			posVbo.disable();
+			normalVbo.disable();
+			texCoordVbo.disable();
+		}
 	}
 
 	private:
