@@ -160,7 +160,7 @@ class ShaderProgram {
 	/++
 	Finds or creates a shader program for the given ShaderGroup
 
-	To do: implement caching.
+	To do: implement cache clearing.
 	+/
 	static ShaderProgram getProgram(ShaderGroup group...) {
 		auto program = programs.get(group, null);
@@ -231,9 +231,7 @@ Abstract base class for shaders
 abstract class Shader {
 	this()(const(char)[] shader, GLenum type) {
 		shaderId = glCreateShader(type);
-		const(char)* ptr = shader.ptr;
-		int len = cast(int)shader.length;
-		glShaderSource(shaderId, 1, &ptr, &len);
+		text = shader;
 		compile();
 	}
 
@@ -271,12 +269,25 @@ abstract class Shader {
 		}
 		this(configText ~ shader, type);
 	}
-
-	~this() {
-		glDeleteShader(shaderId);
+	
+	/++
+	The shader text
+	+/
+	@property const(char)[] text() {
+		return _text;
 	}
 
-	protected:
+	///ditto
+	@property void text(const(char)[] newText) {
+		const(char)* ptr = newText.ptr;
+		int len = cast(int)newText.length;
+		glShaderSource(shaderId, 1, &ptr, &len);
+		_text = newText;
+	}
+
+	/++
+	Compiles the shader
+	+/
 	void compile() {
 		glCompileShader(shaderId);
 		int compiled;
@@ -292,8 +303,13 @@ abstract class Shader {
 		}
 	}
 
+	~this() {
+		glDeleteShader(shaderId);
+	}
+
 	private:
 	uint shaderId;
+	const(char)[] _text;
 }
 
 /++

@@ -1,0 +1,2 @@
+Long-term:
+Implement proper resource handling for environments with multiple OpenGL contexts.

@@ -13,6 +13,8 @@ import dge.graphics.scene;
 
 /++
 An OpenGL window
+
+At present, only one Window should be created; there is not yet proper support for multiple windows.
 +/
 class Window {
 	this(uint width, uint height) {

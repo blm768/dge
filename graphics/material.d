@@ -6,6 +6,7 @@ module dge.graphics.material;
 import std.file;
 import std.stdio;
 import std.string;
+import std.typecons;
 
 import derelict.opengl3.gl3;
 import derelict.sdl2.image;
@@ -70,6 +71,24 @@ enum BlendType {
 	none, mix, add, multiply
 }
 
+struct MaterialShaderCache {
+	alias Tuple!(const(char)[], MaterialShaderConfig) ShaderId;
+
+	FragmentShader fragShader(const(char)[] filename, MaterialShaderConfig config) {
+		auto id = tuple(filename, config);
+		auto shader = fs.get(id, null);
+		if(!shader) {
+			shader = new FragmentShader(readText(filename), config);
+			fs[id] = shader;
+		}
+		return shader;
+	}
+
+	private:
+	VertexShader[ShaderId] vs;
+	FragmentShader[ShaderId] fs;
+}
+
 /++
 Standard material
 +/
@@ -77,7 +96,7 @@ class Material {
 	public:
 	this() {
 		_shaders.vs = defaultVertexShader;
-		_shaders.fs = defaultFragmentShader;
+		_shaders.fs = cache.fragShader(defaultFragmentShader, _config);
 		setProgram();
 	}
 
@@ -170,13 +189,10 @@ class Material {
 		setProgram();+/
 	}
 
-	static @property FragmentShader defaultFragmentShader() {
-		static FragmentShader shader;
-		if(!shader) {
-			shader = new FragmentShader(readText("dge/graphics/shaders/material.frag"), defaultMaterialConfig);
-		}
-		return shader;
-	}
+	enum defaultFragmentShader = "dge/graphics/shaders/material.frag";
+
+	//To do: how to handle multiple OpenGL contexts? Move this to Window?
+	static MaterialShaderCache cache;
 
 	private:
 	void setProgram() {
