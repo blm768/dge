@@ -159,6 +159,8 @@ class ShaderProgram {
 
 	/++
 	Finds or creates a shader program for the given ShaderGroup
+
+	To do: implement caching.
 	+/
 	static ShaderProgram getProgram(ShaderGroup group...) {
 		auto program = programs.get(group, null);
@@ -259,7 +261,13 @@ abstract class Shader {
 	this(T)(const(char)[] shader, GLenum type, T config) {
 		string configText = "#version " ~ glslVersion ~ "\n\n";
 		foreach(member; __traits(allMembers, typeof(config))) {
-			configText ~= "#define " ~ member ~ " " ~ __traits(getMember, config, member).to!string() ~ "\n";
+			//To do: figure out why using an alias causes an error.
+			auto value = __traits(getMember, config, member);
+			static if(isNumeric!(typeof(value))) {
+				configText ~= "#define " ~ member ~ " " ~ value.to!string() ~ "\n";
+			} else {
+				configText ~= "#define " ~ member ~ "_" ~ value.to!string() ~ "\n";
+			}
 		}
 		this(configText ~ shader, type);
 	}

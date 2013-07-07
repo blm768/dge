@@ -24,7 +24,6 @@ in vec4 fragViewPosition;
 in vec3 fragViewNormal;
 in vec2 fragTexCoord;
 
-//To do: figure out how to handle material's ambient color.
 //To do: remove conditionals?
 vec3 lighting(const Light light, vec3 color) {
 	//Is this a directional (sun) light?
@@ -73,11 +72,15 @@ void main() {
 		color *= texture(surface, fragTexCoord);
 	}
 	//To do: optimize conversions.
-	fragColor = vec4(0, 0, 0, color.a);
-	//To do: eliminate warning?
-	for(uint i = 0; i < numLights; ++i) {
-		fragColor.rgb += lighting(lights[i], color.rgb), diffuse.a;
-	}
-	fragColor.rgb += emission.rgb;
+	#if defined(lighting_none)
+		fragColor = color;
+	#else
+		fragColor = vec4(0, 0, 0, color.a);
+		//To do: eliminate warning?
+		for(uint i = 0; i < numLights; ++i) {
+			fragColor.rgb += lighting(lights[i], color.rgb), diffuse.a;
+		}
+		fragColor.rgb += emission.rgb;
+	#endif
 }
 
