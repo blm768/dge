@@ -43,16 +43,16 @@ class Mesh {
         return _vertices;
     }
 
-    @property void vertices(Vertex[] verts) {
+    @property void vertices(const(Vertex)[] verts) {
         _vertices = verts;
-        posVbo.setData(vertices);
+        posVbo.setData(verts);
     }
 
     @property const(Normal)[] normals() const {
     	return _normals;
     }
 
-    @property void normals(Normal[] norm) {
+    @property void normals(const(Normal)[] norm) {
     	_normals = norm;
     	normalVbo.setData(norm);
     }
@@ -61,7 +61,7 @@ class Mesh {
     	return _texCoords;
     }
 
-    @property void texCoords(TexCoord2[] tc) {
+    @property void texCoords(const(TexCoord2)[] tc) {
     	_texCoords = tc;
     	texCoordVbo.setData(tc);
     }
@@ -145,9 +145,9 @@ class Mesh {
 	}
 
 	private:
-    Vertex[] _vertices;
-	Normal[] _normals;
-	TexCoord2[] _texCoords;
+    const(Vertex)[] _vertices;
+	const(Normal)[] _normals;
+	const(TexCoord2)[] _texCoords;
 	AttributeArray posVbo, normalVbo, texCoordVbo;
 	VAO vao;
 }

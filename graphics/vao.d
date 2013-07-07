@@ -44,11 +44,9 @@ struct AttributeArray {
 		}
 	}
 
-	void setData(T)(T[] data) {
+	void setData(T)(const(T)[] data) {
 		bind();
-		T[] data2 = data.dup;
 		glBufferData(GL_ARRAY_BUFFER, data.length * T.sizeof, data.ptr, GL_STATIC_DRAW);
-
 	}
 
 	/++
