@@ -10,19 +10,30 @@ DDOC =<!DOCTYPE HTML>
 </head>
 <body>
 <h1>$(TITLE)</h1>
+<div class="content">
 $(BODY)
+</div>
 </body>
 </html>
 
 BR = <br/>
 
-D_COMMENT =	<div class="comment">$0</div>
-D_STRING =	<div class="d_string">$0</div> 
-D_KEYWORD =	<div class="keyword">$0</div>
-D_PSYMBOL =	<div class="psymbol">$0</div>
-D_PARAM = 	<div class="param">$0</div>
+D_CODE = <div class="d_code">$0</div>
+D_COMMENT =	<span class="d_comment">$0</span>
+D_STRING =	<span class="d_string">$0</span> 
+D_KEYWORD =	<span class="d_keyword">$0</span>
+D_PSYMBOL =	$0
+D_PARAM = 	<span class="d_param">$0</span>
 
 DDOC_SUMMARY = <p class="summary">$0</p>
+DDOC_DESCRIPTION = <p class="desc">$0</p>
 DDOC_DECL = <div class="decl">$0</div>
 DDOC_DECL_DD = <div class="decl_desc">$0</div>
+DDOC_EXAMPLES = $(DDOC_SECTION_H Examples:)$0
+DDOC_SECTION_H = <div class="section_head">$0</div>
+DDOC_MEMBERS = <div class="members">$0</div>
+
+DDOC_PSYMBOL = <span class="d_psymbol">$0</span>
+DDOC_KEYWORD = $(D_KEYWORD $0)
+DDOC_PARAM = $(D_PARAM $0)
 

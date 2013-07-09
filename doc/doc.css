@@ -1,12 +1,48 @@
-.comment {
+body {
+	background-color: #AA0000;
+}
+
+.content {
+	background-color: #FFFFFF;
+	border: 1px solid #AAAAAA;
+}
+
+.d_keyword {
+	color: #0000FF;
+}
+
+.d_psymbol {
+	font-family: monospace;
+	background-color: #DDDDDD;
+	border: 1px solid #AAAAAA;
+}
+
+.d_code {
+	font-family: monospace;
+	white-space: pre;	
+	background-color: #FFDDAA;
+	border: 1px solid #AAAAAA;
+}
+
+.d_comment {
 	color: green;
 }
 
 .summary {
-	color: #555555;
+
 }
+
+.section_head {
+	font-size: large;
+}
+
 .decl {
+	font-family: monospace;
 	font-size: large;
 	width: 100%;
+}
+
+.decl_desc {
+	padding-left: 4em;
 }
 

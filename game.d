@@ -2,6 +2,18 @@
 Classes, etc. to represent a game.
 
 An instance of dge.game.Game must be created before any other DGE utilities are used.
+
+Examples:
+---
+//Load libraries such as SDL.
+Game.initLibraries();
+//Create the window.
+auto window = new Window(800, 600);
+//Open the window and create the OpenGL context.
+w.open();
+//Create the game object.
+auto game = new Game(window);
+---
 +/
 module dge.game;
 
@@ -27,8 +39,7 @@ version(linux) {
 Encapsulates rendering, event handling, etc. for the game
 
 To do:
-Profiling (% of frames that go over time, etc.)
-Unit tests, etc. for all files/functions that need them
+$(UL $(LI Profiling (% of frames that go over time, etc.)))
 +/
 class Game {
 	public:
@@ -38,31 +49,23 @@ class Game {
 		frameDuration  = TickDuration.from!"msecs"(1000/30);
 
 		//To do: move out of the constructor?
+		//To do: only reload if never done before?
 		GLVersion glVersion = DerelictGL3.reload();
 		if(glVersion < glRequiredVersion) {
 			throw new Error("Unable to create OpenGL " ~ to!string(glMajorVersion) ~
 				"." ~ to!string(glMinorVersion) ~ " or higher context. Please try updating your graphics drivers.");
 		}
 
-		/++
-		//Set up sound.
-		int audioRate = 22050;
-		Uint16 audioFormat = MIX_DEFAULT_FORMAT;
-		int audioChannels = 2;
-		int audioBuffers = 4096;
-
-		if(Mix_OpenAudio(audioRate, audioFormat, audioChannels, audioBuffers) != 0) {
-			throw new Error("Unable to initialize audio: " ~ to!string(Mix_GetError()));
-		}+/
-
 		scene = new Scene();
 	}
 
+	/++
+	Loads external libraries such as SDL
+	+/
 	static void initLibraries() {
 		//Load Derelict libraries
 		DerelictSDL2.load();
 		DerelictSDL2Image.load();
-		//DerelictSDLMixer.load();
 	
 		//Set up SDL, etc:
 		if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {

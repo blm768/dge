@@ -1,0 +1,36 @@
+ESCAPES =	/</&lt;/
+			/>/&gt;/
+			/&/&amp;/
+
+DDOC = <?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="doc.xsl"?>
+<ddoc>
+<title>$(TITLE)</title>
+<module>
+<name>$(TITLE)</name>
+$(BODY)
+</module>
+</ddoc>
+
+BR = <br/>
+
+D_CODE = <code>$0</code>
+D_COMMENT =	<comment>$0</comment>
+D_STRING =	<string>$0</string>
+D_KEYWORD =	<keyword>$0</keyword>
+D_PSYMBOL =	$0
+D_PARAM = 	<param>$0</param>
+
+DDOC_SUMMARY = <summary>$0</summary>
+DDOC_DESCRIPTION = <desc>$0</desc>
+DDOC_DECL = <decl>$0</decl>
+DDOC_DECL_DD = <decl_desc>$0</decl_desc>
+DDOC_EXAMPLES = $(DDOC_SECTION $(DDOC_SECTION_H Examples:)$0)
+DDOC_SECTION_H = <h>$0</h>
+DDOC_SECTION = <section>$0</section>
+DDOC_MEMBERS = <members>$0</members>
+
+DDOC_PSYMBOL = <psymbol>$0</psymbol>
+DDOC_KEYWORD = $(D_KEYWORD $0)
+DDOC_PARAM = $(D_PARAM $0)
+

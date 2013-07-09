@@ -17,6 +17,7 @@ An OpenGL window
 At present, only one Window should be created; there is not yet proper support for multiple windows.
 +/
 class Window {
+	///
 	this(uint width, uint height) {
 		_width = width;
 		_height = height;
@@ -24,6 +25,9 @@ class Window {
 		scene = new Scene;
 	}
 
+	/++
+	Opens the Window
+	+/
 	void open() in {
 		assert(!isOpen, "Window must be closed before reopening");	
 	} body {
