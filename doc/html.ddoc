@@ -1,0 +1,28 @@
+ESCAPES =	/</&lt;/
+			/>/&gt;/
+			/&/&amp;/
+
+DDOC =<!DOCTYPE HTML>
+<html>
+<head>
+	<title>$(TITLE)</title>
+	<link rel="stylesheet" href="doc.css"/>
+</head>
+<body>
+<h1>$(TITLE)</h1>
+$(BODY)
+</body>
+</html>
+
+BR = <br/>
+
+D_COMMENT =	<div class="comment">$0</div>
+D_STRING =	<div class="d_string">$0</div> 
+D_KEYWORD =	<div class="keyword">$0</div>
+D_PSYMBOL =	<div class="psymbol">$0</div>
+D_PARAM = 	<div class="param">$0</div>
+
+DDOC_SUMMARY = <p class="summary">$0</p>
+DDOC_DECL = <div class="decl">$0</div>
+DDOC_DECL_DD = <div class="decl_desc">$0</div>
+
