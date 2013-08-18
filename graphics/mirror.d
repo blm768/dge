@@ -135,11 +135,24 @@ class MirrorNode: Node {
 		super.onRemoveFromScene();
 	}
 
-	Mesh mesh;
+	@property Mesh mesh() {
+		return _mesh;
+	}
+
+	@property void mesh(Mesh m) {
+		_mesh = m;
+		if(!reflectionMaterial) {
+			//
+		}
+	}
+
+	Material reflectionMaterial;
 
 	//enum TransformMatrix zTransform = TransformMatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 0, 1]]);
 
 	enum GLuint stencilMask = 1;
+	private:
+	Mesh _mesh;
 }
 
 RenderPass mirrorPass;

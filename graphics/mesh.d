@@ -79,39 +79,6 @@ class Mesh {
 			this(mat);
 		}
 
-
-		/++
-		Draws the FaceGroup
-
-		TODO: make useTransparency work?
-		+/
-		void draw(Scene scene, TransformMatrix model, Material mat = null) {
-			if(!mat) {
-				mat = material;
-			}
-			prepDraw(scene, model, mat);
-
-			glDrawElements(GL_TRIANGLES, cast(int)faces.length * 3, GL_UNSIGNED_INT, null);
-
-			finishDraw(mat);
-		}
-
-		@property const(Face)[] faces() const {
-			return _faces;
-		}
-
-		@property void faces(Face[] faces) {
-			_faces = faces;
-			elementArray.setData(_faces);
-		}
-
-		//To do: encapsulate?
-		Material material;
-
-		private:
-		Face[] _faces;
-		ElementArray elementArray;
-
 		void prepDraw(Scene scene, TransformMatrix model, Material mat) {
 			auto program = mat.program;
 			program.use();
@@ -142,9 +109,38 @@ class Mesh {
 			normalVbo.disable();
 			texCoordVbo.disable();
 		}
+
+		/++
+		Draws the FaceGroup
+		+/
+		void draw(Scene scene, TransformMatrix model, Material mat = null) {
+			if(!mat) {
+				mat = material;
+			}
+			prepDraw(scene, model, mat);
+
+			glDrawElements(GL_TRIANGLES, cast(int)faces.length * 3, GL_UNSIGNED_INT, null);
+
+			finishDraw(mat);
+		}
+
+		@property const(Face)[] faces() const {
+			return _faces;
+		}
+
+		@property void faces(Face[] faces) {
+			_faces = faces;
+			elementArray.setData(_faces);
+		}
+
+		//To do: encapsulate?
+		Material material;
+
+		private:
+		Face[] _faces;
+		ElementArray elementArray;
 	}
 
-	private:
     const(Vertex)[] _vertices;
 	const(Normal)[] _normals;
 	const(TexCoord2)[] _texCoords;

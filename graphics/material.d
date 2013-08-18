@@ -15,6 +15,7 @@ import derelict.sdl2.sdl;
 
 import dge.config;
 public import dge.graphics.shader;
+import dge.util.object;
 
 struct TexCoord2 {
 	this(GLfloat x, GLfloat y) {
@@ -93,7 +94,8 @@ struct MaterialShaderCache {
 Standard material
 +/
 class Material {
-	public:
+	//mixin dup;
+
 	this() {
 		_shaders.vs = defaultVertexShader;
 		_shaders.fs = cache.fragShader(defaultFragmentShader, _config);
