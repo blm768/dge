@@ -12,10 +12,9 @@ import derelict.opengl3.gl3;
 import derelict.sdl2.image;
 import derelict.sdl2.sdl;
 
-
 import dge.config;
 public import dge.graphics.shader;
-import dge.util.object;
+//import dge.util.object;
 
 struct TexCoord2 {
 	this(GLfloat x, GLfloat y) {
@@ -133,6 +132,7 @@ class Material {
 				break;
 			case BlendType.multiply:
 				glBlendFuncSeparate(GL_DST_COLOR, GL_ZERO, GL_ONE, GL_ZERO);
+				break;
 			default:
 				//Do nothing.
 		}
@@ -287,4 +287,3 @@ class Texture2D: Texture {
 
 	bool transparent;
 }
-

@@ -1,0 +1,9 @@
+name "dge"
+description "A minimal D application."
+copyright "Copyright © 2015, blm"
+authors "blm"
+targetType "library"
+
+dependency "derelict-sdl2" version=">=1.9.7"
+dependency "derelict-gl3" version=">=1.0.16"
+
