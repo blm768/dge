@@ -22,7 +22,7 @@ class Window {
 		_width = width;
 		_height = height;
 
-		scene = new Scene;
+		_scene = new Scene;
 	}
 
 	/++
@@ -117,12 +117,9 @@ class Window {
 	}
 
 	///
-	Scene scene;
-
-	~this() {
-		//To do: consider the case if SDL is quit before this destructor is called.
-		close();
-	}
+	@property Scene scene() {
+		return _scene;
+	};
 
 	//TODO: more encapsulation?
 	uint depthBits = defaultDepthBits;
@@ -137,7 +134,10 @@ class Window {
 
 	uint _width, _height;
 	bool _isOpen;
+
 	SDL_Window* _window;
 	SDL_GLContext context;
 	SDL_RendererInfo info;
+
+	Scene _scene;
 }

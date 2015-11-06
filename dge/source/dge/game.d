@@ -7,10 +7,13 @@ Examples:
 ---
 //Load libraries such as SDL.
 Game.initLibraries();
+scope(exit) Game.finalizeLibraries();
 //Create the window.
 auto window = new Window(800, 600);
 //Open the window and create the OpenGL context.
 w.open();
+//Make sure the window is cleaned up.
+scope(exit) w.close();
 //Create the game object.
 auto game = new Game(window);
 ---
@@ -47,17 +50,16 @@ class Game {
 	this(Window w) {
 		window = w;
 
+		//TODO: configure better.
 		frameDuration  = TickDuration.from!"msecs"(1000/30);
 
-		//To do: move out of the constructor?
-		//To do: only reload if never done before?
+		//TODO: move out of the constructor?
+		//TODO: only reload if never done before!
 		GLVersion glVersion = DerelictGL3.reload();
 		if(glVersion < glRequiredVersion) {
 			throw new Error("Unable to create OpenGL " ~ to!string(glMajorVersion) ~
 				"." ~ to!string(glMinorVersion) ~ " or higher context. Please try updating your graphics drivers.");
 		}
-
-		scene = new Scene();
 	}
 
 	/++
@@ -78,7 +80,12 @@ class Game {
 		SDL_JoystickEventState(SDL_ENABLE);
 	}
 
+	static void finalizeLibraries() {
+		SDL_Quit();
+	}
+
 	void mainLoop() {
+		import std.stdio;
 		running = true;
 		SDL_Event evt;
 		frameTimer.start();
@@ -97,12 +104,12 @@ class Game {
 	}
 
 	void loop() {
-		scene.update();
+		window.scene.update();
 	}
 
 	void render() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		scene.render();
+		window.scene.render();
 		window.present();
 	}
 
@@ -137,13 +144,7 @@ class Game {
 		}
 	}
 
-	~this() {
-		//TODO: move this out! (i.e. into a RAII thing? Tell users to have scope(exit) stuff?)
-		SDL_Quit();
-	}
-
 	//TODO: encapsulate!
-	Scene scene;
 	Window window;
 	TickDuration frameDuration;
 

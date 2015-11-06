@@ -1,6 +1,7 @@
 /++
 Utilities for linked-list node trees
 +/
+//TODO: rename!
 module dge.util.list;
 
 mixin template commonNode(Parent, Child) {

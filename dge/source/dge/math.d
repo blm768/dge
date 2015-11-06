@@ -103,6 +103,7 @@ struct Vector3 {
 		return opBinary!op(other);
 	}
 
+	//TODO: un-hack.
 	//Hack to get DMD to work :)
 	alias Matrix!(4, 1) Vec4;
 	Vector3 opBinaryRight(string op: "*")(const TransformMatrix m) const {
