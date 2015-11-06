@@ -1,9 +1,10 @@
 name "dge"
-description "A minimal D application."
-copyright "Copyright © 2015, blm"
-authors "blm"
+description "A game engine."
+copyright "Copyright © 2015, Benjamin L. Merritt"
+authors "Benjamin L. Merritt <blm768@gmail.com>"
 targetType "library"
 
 dependency "derelict-sdl2" version=">=1.9.7"
 dependency "derelict-gl3" version=">=1.0.16"
 
+subpackage "./test_app/"

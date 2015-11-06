@@ -17,4 +17,5 @@ template key(string k) {
 	mixin("enum SDL_Scancode key = SDL_SCANCODE_" ~ toUpper(k) ~ ";");
 }
 
-package bool[SDL_NUM_SCANCODES] keys;
+//TODO: encapsulate.
+package bool[SDL_NUM_SCANCODES] keyStatus;

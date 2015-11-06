@@ -5,6 +5,7 @@ Handles the NBTMesh format
 module dge.graphics.formats.nbm;
 
 import core.exception;
+import std.algorithm;
 import std.conv;
 import std.exception;
 import std.file;
@@ -21,6 +22,7 @@ import dge.graphics.formats.common;
 import dge.resource;
 
 //To do: eliminate duplication on big-endian machines?
+//TODO: use D std. lib functions?
 T fromBytes(T)(ubyte[] bytes)
 in {
 	assert(bytes.length >= T.sizeof, to!string(T.sizeof) ~ " bytes expected, not " ~ to!string(bytes.length));
@@ -28,7 +30,7 @@ in {
 body {
 	ubyte[] copiedBytes = bytes[0 .. T.sizeof].dup;
 	version(LittleEndian) {
-		copiedBytes.reverse;
+		reverse(copiedBytes);
 	}
 	return *(cast(T*)copiedBytes);
 }
@@ -200,7 +202,7 @@ class NBTFile {
 			bytes = bytes[totalLen .. $];
 			//Flip bytes.
 			for(size_t offset = 0; offset < totalLen; offset += Tag.nativeSizes[type]) {
-				array[offset .. offset + Tag.nativeSizes[type]].reverse;
+				reverse(array[offset .. offset + Tag.nativeSizes[type]]);
 			}
 		} else {
 			array = bytes[0 .. totalLen];

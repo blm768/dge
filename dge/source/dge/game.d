@@ -31,6 +31,7 @@ public import dge.input.mapping;
 public import dge.sound;
 public import dge.window;
 
+//TODO: remove (or move somewhere else)
 version(linux) {
 	pragma(lib, "dl");
 }
@@ -66,7 +67,7 @@ class Game {
 		//Load Derelict libraries
 		DerelictSDL2.load();
 		DerelictSDL2Image.load();
-	
+
 		//Set up SDL, etc:
 		if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 			throw new Error("Unable to initialize SDL:" ~ to!string(SDL_GetError()));
@@ -111,10 +112,10 @@ class Game {
 				running = false;
 				break;
 			case SDL_KEYDOWN:
-				keys[evt.key.keysym.scancode] = true;
+				keyStatus[evt.key.keysym.scancode] = true;
 				break;
 			case SDL_KEYUP:
-				keys[evt.key.keysym.scancode] = false;
+				keyStatus[evt.key.keysym.scancode] = false;
 				break;
 			case SDL_JOYBUTTONDOWN:
 				Joystick.openedJoysticks[evt.jbutton.which].buttons[evt.jbutton.button] = true;
