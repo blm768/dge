@@ -1,0 +1,5 @@
+name "test-app"
+description "A test app for DGE"
+targetType "executable"
+
+dependency "dge" path="../"
