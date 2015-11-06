@@ -446,12 +446,6 @@ class AnimatedMeshNode: MeshNode {
 
 ///
 class LightNode: Node {
-	this(Vector3 position, Color diffuse, Color specular = Color(0.0, 0.0, 0.0, 1.0)) {
-		this.position = position;
-		this.diffuse = diffuse;
-		this.specular = specular;
-	}
-
 	override void onAddToScene() {
 		super.onAddToScene();
 		scene.lights.add(this);

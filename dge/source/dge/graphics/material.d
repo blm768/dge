@@ -72,13 +72,13 @@ enum BlendType {
 }
 
 struct MaterialShaderCache {
-	alias Tuple!(const(char)[], MaterialShaderConfig) ShaderId;
+	alias Tuple!(string, MaterialShaderConfig) ShaderId;
 
-	FragmentShader fragShader(const(char)[] filename, MaterialShaderConfig config) {
-		auto id = tuple(filename, config);
+	FragmentShader fragShader(const(char)[] shaderText, MaterialShaderConfig config) {
+		auto id = tuple(shaderText.idup, config);
 		auto shader = fs.get(id, null);
 		if(!shader) {
-			shader = new FragmentShader(readText(filename), config);
+			shader = new FragmentShader(shaderText, config);
 			fs[id] = shader;
 		}
 		return shader;
@@ -191,7 +191,8 @@ class Material {
 		setProgram();+/
 	}
 
-	enum defaultFragmentShader = "dge/graphics/shaders/material.frag";
+	//TODO: unify with default vert shader system.
+	enum defaultFragmentShader = import("material.frag");
 
 	//To do: how to handle multiple OpenGL contexts? Move this to Window?
 	static MaterialShaderCache cache;

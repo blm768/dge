@@ -4,7 +4,6 @@ import derelict.opengl3.gl3;
 
 import std.conv;
 import std.file;
-import std.stdio;
 import std.string;
 import std.traits;
 
@@ -43,7 +42,7 @@ class ShaderProgram {
 			glUniform3fv(uniform, 1, vec.ptr);
 		}
 	}
-	
+
 	///ditto
 	void setUniform(int uniform, Vector3[] vec) {
 		if(uniform > -1) {
@@ -52,7 +51,7 @@ class ShaderProgram {
 			glUniform3fv(uniform, cast(int)vec.length, cast(float*)vec.ptr);
 		}
 	}
-	
+
 	///ditto
 	void setUniform(int uniform, Color c) {
 		if(uniform > -1) {
@@ -61,7 +60,7 @@ class ShaderProgram {
 			glUniform4fv(uniform, 1, c.ptr);
 		}
 	}
-	
+
 	///ditto
 	void setUniform(int uniform, Color[] c) {
 		if(uniform > -1) {
@@ -269,7 +268,7 @@ abstract class Shader {
 		}
 		this(configText ~ shader, type);
 	}
-	
+
 	/++
 	The shader text
 	+/
@@ -345,11 +344,11 @@ class FragmentShader: Shader {
 	}
 }
 
-
+//TODO: move?
 @property VertexShader defaultVertexShader() {
 	static VertexShader shader;
 	if(!shader) {
-		shader = new VertexShader(readText("dge/graphics/shaders/default.vert"));
+		shader = new VertexShader(import("default.vert"));
 	}
 	return shader;
 }
@@ -434,4 +433,3 @@ struct VertexAttributeLocations {
 	}
 	int position, normal, texCoord;
 }
-

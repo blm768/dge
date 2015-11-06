@@ -77,10 +77,9 @@ void main() {
 	#else
 		fragColor = vec4(0, 0, 0, color.a);
 		//To do: eliminate warning?
-		for(uint i = 0; i < numLights; ++i) {
+		for(uint i = 0u; i < numLights; ++i) {
 			fragColor.rgb += lighting(lights[i], color.rgb), diffuse.a;
 		}
 		fragColor.rgb += emission.rgb;
 	#endif
 }
-

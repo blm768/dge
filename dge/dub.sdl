@@ -7,4 +7,6 @@ targetType "library"
 dependency "derelict-sdl2" version=">=1.9.7"
 dependency "derelict-gl3" version=">=1.0.16"
 
+stringImportPaths "shaders"
+
 subpackage "./test_app/"
