@@ -138,9 +138,11 @@ class Game {
 	}
 
 	~this() {
+		//TODO: move this out! (i.e. into a RAII thing? Tell users to have scope(exit) stuff?)
 		SDL_Quit();
 	}
 
+	//TODO: encapsulate!
 	Scene scene;
 	Window window;
 	TickDuration frameDuration;

@@ -29,7 +29,7 @@ class Window {
 	Opens the Window
 	+/
 	void open() in {
-		assert(!isOpen, "Window must be closed before reopening");	
+		assert(!isOpen, "Window must be closed before reopening");
 	} body {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glMajorVersion);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glMinorVersion);
@@ -37,7 +37,7 @@ class Window {
 		//Make sure we get an accelerated renderer.
 		SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
 		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
 		static if(useBufferAlpha) {
@@ -49,12 +49,13 @@ class Window {
 
 		_window = SDL_CreateWindow(null, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                             width, height, SDL_WINDOW_OPENGL);
-        if(!_window) {
-            throw new Error("Unable to create SDL window: " ~ to!string(SDL_GetError()));
+    if(!_window) {
+      throw new Error("Unable to create SDL window: " ~ to!string(SDL_GetError()));
 		}
 
-        context = SDL_GL_CreateContext(_window);
+    context = SDL_GL_CreateContext(_window);
 		if(!context) {
+			//TODO: create specific error class?
 			throw new Error("Unable to create OpenGL " ~ to!string(glMajorVersion) ~
 				"." ~ to!string(glMinorVersion) ~ " or higher context. Please try updating your graphics drivers.");
 		}
@@ -66,7 +67,7 @@ class Window {
 		glEnable(GL_DEPTH_TEST);
 
 		onResize();
-		
+
 		_isOpen = true;
 	}
 
@@ -110,7 +111,7 @@ class Window {
 	@property uint height() {
 		return _height;
 	}
-	
+
 	@property bool isOpen() {
 		return _isOpen;
 	}
@@ -140,4 +141,3 @@ class Window {
 	SDL_GLContext context;
 	SDL_RendererInfo info;
 }
-
