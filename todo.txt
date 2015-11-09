@@ -1,2 +1,5 @@
 Long-term:
 Implement proper resource handling for environments with multiple OpenGL contexts.
+
+Mid-term:
+Start on unit-testing (shader code generation is a good place to start.)
