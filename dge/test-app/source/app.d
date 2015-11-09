@@ -18,12 +18,12 @@ int main(string[] args) {
   Game game = new Game(window);
 
   CameraNode camera = new CameraNode(perspectiveMatrix(aspectRatio, 30.0, 0.001, 10000));
-  camera.position = Vector3(0, 0, -4);
+  camera.position = Vector3(0, 0, 4);
   scene.add(camera);
 
-  //TODO: make constructor arg list shorter.
   LightNode light = new LightNode;
-  light.position = Vector3(0, 4, 0);
+  light.diffuse = Color(1f, 1f, 1f, 1f);
+  light.position = Vector3(0, 4, 1);
   scene.add(light);
 
   MeshNode m = new MeshNode(rectangle(1, 1));
