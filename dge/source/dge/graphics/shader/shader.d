@@ -1,4 +1,4 @@
-module dge.graphics.shader;
+module dge.graphics.shader.shader;
 
 import derelict.opengl3.gl3;
 
@@ -31,7 +31,7 @@ class ShaderProgram {
 	}
 
 	/++
-	To do:
+	TODO:
 	Use glProgramUniform() if possible.
 	Remove the use() call? (could break some code and eventually won't be needed)
 	+/
@@ -212,6 +212,8 @@ class ShaderProgram {
 
 /++
 A group of shaders that go into a program
+
+TODO: create a "valid()" property?
 +/
 struct ShaderGroup {
 	///

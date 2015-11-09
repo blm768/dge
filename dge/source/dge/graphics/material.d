@@ -13,7 +13,7 @@ import derelict.sdl2.image;
 import derelict.sdl2.sdl;
 
 import dge.config;
-public import dge.graphics.shader;
+public import dge.graphics.shader.shader;
 //import dge.util.object;
 
 struct TexCoord2 {
