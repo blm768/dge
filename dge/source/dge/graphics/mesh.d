@@ -69,12 +69,15 @@ class Mesh {
 	FaceGroup[] faceGroups;
 
 	class FaceGroup {
-		this(Material mat = new Material) {
+		this(Material mat = null) {
+			if(mat is null) {
+				mat = new Material;
+			}
 			this.material = mat;
 			elementArray = ElementArray(GL_UNSIGNED_INT);
 		}
 
-		this(Face[] faces, Material mat = new Material) {
+		this(Face[] faces, Material mat = null) {
 			this.faces = faces;
 			this(mat);
 		}

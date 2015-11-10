@@ -6,6 +6,7 @@ import std.stdio;
 
 import std.conv;
 
+//TODO: make a struct?
 class VAO {
 	this() {
 		glGenVertexArrays(1, &id);
@@ -31,6 +32,9 @@ struct AttributeArray {
 		this.elementsPerVertex = elementsPerVertex;
 		setData([]);
 	}
+
+	///AttributeArray objecs should not be copied.
+	@disable this(this);
 
 	void bind() {
 		glBindBuffer(GL_ARRAY_BUFFER, id);

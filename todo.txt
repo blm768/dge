@@ -3,3 +3,4 @@ Implement proper resource handling for environments with multiple OpenGL context
 
 Mid-term:
 Start on unit-testing (shader code generation is a good place to start.)
+Figure out how to handle cleanup of shaders, etc. properly. (Finalizers don't count!)

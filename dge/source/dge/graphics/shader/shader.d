@@ -207,6 +207,7 @@ class ShaderProgram {
 	ShaderGroup shaders;
 	uint programId;
 
+	//TODO: remove this? Create a ShaderProgramCache?
 	static ShaderProgram[ShaderGroup] programs;
 }
 
@@ -257,7 +258,7 @@ abstract class Shader {
 		compile();
 	}
 
-	this(T)(const(char)[] shader, GLenum type, T config) {
+	deprecated this(T)(const(char)[] shader, GLenum type, T config) {
 		string configText = "#version " ~ glslVersion ~ "\n\n";
 		foreach(member; __traits(allMembers, typeof(config))) {
 			//To do: figure out why using an alias causes an error.

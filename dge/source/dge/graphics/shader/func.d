@@ -8,7 +8,7 @@ import dge.graphics.shader.expression;
 import dge.graphics.shader.types;
 
 /++
-
+TODO: remove polymorphism? (Do we need it?)
 +/
 abstract class ShaderFunction {
     /++
