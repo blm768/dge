@@ -25,7 +25,7 @@ A typical mesh
 +/
 class Mesh {
 	this() {
-		vao = new VAO;
+		vao = VAO.create();
 		vao.bind();
 		posVbo = AttributeArray(3, GL_FLOAT, Vector3.sizeof);
 		normalVbo = AttributeArray(3, GL_FLOAT, Vector3.sizeof);

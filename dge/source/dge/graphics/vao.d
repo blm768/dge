@@ -6,24 +6,42 @@ import std.stdio;
 
 import std.conv;
 
-//TODO: make a struct?
-class VAO {
-	this() {
+struct VAO {
+	@disable this();
+
+	private this(uint id) {
+		this.id = id;
+	}
+
+	static VAO create() {
+		uint id;
 		glGenVertexArrays(1, &id);
+		return VAO(id);
     }
 
 	void bind() {
 		glBindVertexArray(id);
 	}
 
-	~this() {
+	void unbind() {
+		glBindVertexArray(0);
+	}
+
+	void dispose() {
 		glDeleteVertexArrays(1, &id);
+	}
+
+	~this() {
+		dispose();
 	}
 
 	private:
 	uint id;
 }
 
+/++
+TODO: abstract the buffer into its own object?
++/
 struct AttributeArray {
 	this(int elementsPerVertex, GLenum elementType, size_t elementSize) {
 		glGenBuffers(1, &id);
@@ -34,6 +52,7 @@ struct AttributeArray {
 	}
 
 	///AttributeArray objecs should not be copied.
+	//TODO: implement some kind of ref-counting instead?
 	@disable this(this);
 
 	void bind() {
@@ -73,9 +92,14 @@ struct AttributeArray {
 		}
 	}
 
+	void dispose() {
+		disable();
+		glDeleteBuffers(1, &id);
+		id = 0;
+	}
+
     ~this() {
-        disable();
-        glDeleteBuffers(1, &id);
+		dispose();
     }
 
     private:
