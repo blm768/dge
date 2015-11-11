@@ -13,6 +13,8 @@ struct VAO {
 		this.id = id;
 	}
 
+	@disable this(this);
+
 	static VAO create() {
 		uint id;
 		glGenVertexArrays(1, &id);
@@ -57,6 +59,10 @@ struct AttributeArray {
 
 	void bind() {
 		glBindBuffer(GL_ARRAY_BUFFER, id);
+	}
+
+	void unbind() {
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
 	@property void bindToAttribute(int attNum) {
